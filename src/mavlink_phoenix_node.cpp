@@ -1403,7 +1403,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(100);
 
     to_mav_mav_raw_data_publisher     = n.advertise<mavlink_phoenix::MAV_RAW_DATA>("/to_mav_mav_raw_data", 10);
-    from_mav_mav_raw_data_subscriber  = n.subscribe("/from_mav_MAV_RAW_DATA", 10, from_mav_mav_raw_data_callback);
+    from_mav_mav_raw_data_subscriber  = n.subscribe("/from_mav_mav_raw_data", 10, from_mav_mav_raw_data_callback);
 
     /**
      * Messages Publishers Initialization
