@@ -18,8 +18,6 @@ ros::Publisher from_mav_notification_pub;
 ros::Publisher from_mav_heartbeat_pub;
 ros::Publisher from_mav_debug_pub;
 ros::Publisher from_mav_telemetry_pub;
-ros::Publisher from_mav_control_lights_pub;
-ros::Publisher from_mav_control_command_pub;
 ros::Publisher from_mav_imu_pub;
 ros::Publisher from_mav_odometer_abs_pub;
 ros::Publisher from_mav_odometer_raw_pub;
@@ -28,17 +26,11 @@ ros::Publisher from_mav_odometer_delta_raw_pub;
 ros::Publisher from_mav_odometer_pub;
 ros::Publisher from_mav_proximity_pub;
 ros::Publisher from_mav_parking_lot_pub;
-ros::Publisher from_mav_config_request_count_pub;
-ros::Publisher from_mav_config_request_pub;
-ros::Publisher from_mav_config_request_params_pub;
 ros::Publisher from_mav_config_count_pub;
 ros::Publisher from_mav_config_pub;
 ros::Publisher from_mav_config_param_int_pub;
 ros::Publisher from_mav_config_param_bool_pub;
 ros::Publisher from_mav_config_param_float_pub;
-ros::Publisher from_mav_config_param_set_int_pub;
-ros::Publisher from_mav_config_param_set_bool_pub;
-ros::Publisher from_mav_config_param_set_float_pub;
 ros::Publisher from_mav_command_pub;
 
 /**
@@ -56,137 +48,6 @@ int write_to_mav(uint8_t *b, int sz) {
   return rc;
 }
 
-/**
- *
- */
-void to_mav_notification_callback(
-    const mavlink_phoenix::NOTIFICATION::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_NOTIFICATION request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_notification_t notification_out;
-
-  /** ASSIGN FIELDS **/
-
-  notification_out.timestamp = msg->timestamp;
-  notification_out.type = msg->type;
-  memcpy(&(notification_out.description), &(msg->description[0]),
-         sizeof(char) * (int)(msg->description.size()));
-  memcpy(&(notification_out.tag), &(msg->tag[0]),
-         sizeof(char) * (int)(msg->tag.size()));
-
-  mavlink_msg_notification_encode(msg->sysid, msg->compid, &m,
-                                  &notification_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_heartbeat_callback(
-    const mavlink_phoenix::HEARTBEAT::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_HEARTBEAT request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_heartbeat_t heartbeat_out;
-
-  /** ASSIGN FIELDS **/
-
-  heartbeat_out.timestamp = msg->timestamp;
-  heartbeat_out.battery_voltage = msg->battery_voltage;
-  heartbeat_out.remote_control = msg->remote_control;
-  heartbeat_out.drive_mode = msg->drive_mode;
-  heartbeat_out.rc_velocity = msg->rc_velocity;
-  heartbeat_out.rc_steering_front = msg->rc_steering_front;
-  heartbeat_out.rc_steering_rear = msg->rc_steering_rear;
-
-  mavlink_msg_heartbeat_encode(msg->sysid, msg->compid, &m, &heartbeat_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_debug_callback(const mavlink_phoenix::DEBUG::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_DEBUG request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_debug_t debug_out;
-
-  /** ASSIGN FIELDS **/
-
-  debug_out.timestamp = msg->timestamp;
-  memcpy(&(debug_out.data), &(msg->data[0]),
-         sizeof(float) * (int)(msg->data.size()));
-
-  mavlink_msg_debug_encode(msg->sysid, msg->compid, &m, &debug_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_telemetry_callback(
-    const mavlink_phoenix::TELEMETRY::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_TELEMETRY request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_telemetry_t telemetry_out;
-
-  /** ASSIGN FIELDS **/
-
-  telemetry_out.timestamp = msg->timestamp;
-  telemetry_out.xacc = msg->xacc;
-  telemetry_out.yacc = msg->yacc;
-  telemetry_out.zacc = msg->zacc;
-  telemetry_out.xgyro = msg->xgyro;
-  telemetry_out.ygyro = msg->ygyro;
-  telemetry_out.zgyro = msg->zgyro;
-  telemetry_out.dist_front = msg->dist_front;
-  telemetry_out.dist_rear = msg->dist_rear;
-  telemetry_out.dist_side = msg->dist_side;
-  telemetry_out.odom = msg->odom;
-  telemetry_out.odom_accumulated = msg->odom_accumulated;
-  telemetry_out.xmotion_front = msg->xmotion_front;
-  telemetry_out.ymotion_front = msg->ymotion_front;
-  telemetry_out.xmotion_rear = msg->xmotion_rear;
-  telemetry_out.ymotion_rear = msg->ymotion_rear;
-  telemetry_out.motion_front_quality = msg->motion_front_quality;
-  telemetry_out.motion_rear_quality = msg->motion_rear_quality;
-  telemetry_out.current_motor = msg->current_motor;
-  telemetry_out.current_servo_front = msg->current_servo_front;
-  telemetry_out.current_servo_rear = msg->current_servo_rear;
-  telemetry_out.current_total = msg->current_total;
-  telemetry_out.pwm_servo_front = msg->pwm_servo_front;
-  telemetry_out.pwm_servo_rear = msg->pwm_servo_rear;
-  telemetry_out.battery_voltage = msg->battery_voltage;
-  telemetry_out.remote_control = msg->remote_control;
-  telemetry_out.drive_mode = msg->drive_mode;
-
-  mavlink_msg_telemetry_encode(msg->sysid, msg->compid, &m, &telemetry_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
 /**
  *
  */
@@ -237,239 +98,6 @@ void to_mav_control_command_callback(
 
   mavlink_msg_control_command_encode(msg->sysid, msg->compid, &m,
                                      &control_command_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_imu_callback(const mavlink_phoenix::IMU::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_IMU request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_imu_t imu_out;
-
-  /** ASSIGN FIELDS **/
-
-  imu_out.timestamp = msg->timestamp;
-  imu_out.xacc = msg->xacc;
-  imu_out.yacc = msg->yacc;
-  imu_out.zacc = msg->zacc;
-  imu_out.xgyro = msg->xgyro;
-  imu_out.ygyro = msg->ygyro;
-  imu_out.zgyro = msg->zgyro;
-  imu_out.xmag = msg->xmag;
-  imu_out.ymag = msg->ymag;
-  imu_out.zmag = msg->zmag;
-
-  mavlink_msg_imu_encode(msg->sysid, msg->compid, &m, &imu_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_odometer_abs_callback(
-    const mavlink_phoenix::ODOMETER_ABS::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_ODOMETER_ABS request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_odometer_abs_t odometer_abs_out;
-
-  /** ASSIGN FIELDS **/
-
-  odometer_abs_out.timestamp = msg->timestamp;
-  odometer_abs_out.xdist = msg->xdist;
-  odometer_abs_out.ydist = msg->ydist;
-  odometer_abs_out.zdist = msg->zdist;
-  odometer_abs_out.xvelocity = msg->xvelocity;
-  odometer_abs_out.yvelocity = msg->yvelocity;
-  odometer_abs_out.zvelocity = msg->zvelocity;
-  odometer_abs_out.quality = msg->quality;
-
-  mavlink_msg_odometer_abs_encode(msg->sysid, msg->compid, &m,
-                                  &odometer_abs_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_odometer_raw_callback(
-    const mavlink_phoenix::ODOMETER_RAW::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_ODOMETER_RAW request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_odometer_raw_t odometer_raw_out;
-
-  /** ASSIGN FIELDS **/
-
-  odometer_raw_out.timestamp = msg->timestamp;
-  odometer_raw_out.xdist = msg->xdist;
-  odometer_raw_out.ydist = msg->ydist;
-  odometer_raw_out.zdist = msg->zdist;
-  odometer_raw_out.quality = msg->quality;
-
-  mavlink_msg_odometer_raw_encode(msg->sysid, msg->compid, &m,
-                                  &odometer_raw_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_odometer_delta_callback(
-    const mavlink_phoenix::ODOMETER_DELTA::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_ODOMETER_DELTA request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_odometer_delta_t odometer_delta_out;
-
-  /** ASSIGN FIELDS **/
-
-  odometer_delta_out.timestamp = msg->timestamp;
-  odometer_delta_out.delta = msg->delta;
-  odometer_delta_out.xdist = msg->xdist;
-  odometer_delta_out.ydist = msg->ydist;
-  odometer_delta_out.zdist = msg->zdist;
-  odometer_delta_out.xvelocity = msg->xvelocity;
-  odometer_delta_out.yvelocity = msg->yvelocity;
-  odometer_delta_out.zvelocity = msg->zvelocity;
-  odometer_delta_out.quality = msg->quality;
-
-  mavlink_msg_odometer_delta_encode(msg->sysid, msg->compid, &m,
-                                    &odometer_delta_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_odometer_delta_raw_callback(
-    const mavlink_phoenix::ODOMETER_DELTA_RAW::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_ODOMETER_DELTA_RAW request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_odometer_delta_raw_t odometer_delta_raw_out;
-
-  /** ASSIGN FIELDS **/
-
-  odometer_delta_raw_out.timestamp = msg->timestamp;
-  odometer_delta_raw_out.delta = msg->delta;
-  odometer_delta_raw_out.xdist = msg->xdist;
-  odometer_delta_raw_out.ydist = msg->ydist;
-  odometer_delta_raw_out.zdist = msg->zdist;
-  odometer_delta_raw_out.quality = msg->quality;
-
-  mavlink_msg_odometer_delta_raw_encode(msg->sysid, msg->compid, &m,
-                                        &odometer_delta_raw_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_odometer_callback(const mavlink_phoenix::ODOMETER::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_ODOMETER request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_odometer_t odometer_out;
-
-  /** ASSIGN FIELDS **/
-
-  odometer_out.timestamp = msg->timestamp;
-  odometer_out.time_delta = msg->time_delta;
-  odometer_out.xdist_delta = msg->xdist_delta;
-  odometer_out.ydist_delta = msg->ydist_delta;
-  odometer_out.zdist_delta = msg->zdist_delta;
-  odometer_out.xdist_abs = msg->xdist_abs;
-  odometer_out.ydist_abs = msg->ydist_abs;
-  odometer_out.zdist_abs = msg->zdist_abs;
-  odometer_out.xvelocity = msg->xvelocity;
-  odometer_out.yvelocity = msg->yvelocity;
-  odometer_out.zvelocity = msg->zvelocity;
-  odometer_out.quality = msg->quality;
-
-  mavlink_msg_odometer_encode(msg->sysid, msg->compid, &m, &odometer_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_proximity_callback(
-    const mavlink_phoenix::PROXIMITY::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_PROXIMITY request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_proximity_t proximity_out;
-
-  /** ASSIGN FIELDS **/
-
-  proximity_out.timestamp = msg->timestamp;
-  proximity_out.distance = msg->distance;
-
-  mavlink_msg_proximity_encode(msg->sysid, msg->compid, &m, &proximity_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_parking_lot_callback(
-    const mavlink_phoenix::PARKING_LOT::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_PARKING_LOT request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_parking_lot_t parking_lot_out;
-
-  /** ASSIGN FIELDS **/
-
-  parking_lot_out.timestamp = msg->timestamp;
-  parking_lot_out.parking_lot_size = msg->parking_lot_size;
-  parking_lot_out.parking_lot_position = msg->parking_lot_position;
-
-  mavlink_msg_parking_lot_encode(msg->sysid, msg->compid, &m, &parking_lot_out);
   uint16_t len = mavlink_msg_to_send_buffer(data, &m);
   write_to_mav(data, len);
 }
@@ -545,146 +173,6 @@ void to_mav_config_request_params_callback(
 
   mavlink_msg_config_request_params_encode(msg->sysid, msg->compid, &m,
                                            &config_request_params_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_config_count_callback(
-    const mavlink_phoenix::CONFIG_COUNT::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG_COUNT request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_config_count_t config_count_out;
-
-  /** ASSIGN FIELDS **/
-
-  config_count_out.config_id_mask = msg->config_id_mask;
-
-  mavlink_msg_config_count_encode(msg->sysid, msg->compid, &m,
-                                  &config_count_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_config_callback(const mavlink_phoenix::CONFIG::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_config_t config_out;
-
-  /** ASSIGN FIELDS **/
-
-  config_out.config_id = msg->config_id;
-  memcpy(&(config_out.name), &(msg->name[0]),
-         sizeof(char) * (int)(msg->name.size()));
-  config_out.param_id_mask = msg->param_id_mask;
-
-  mavlink_msg_config_encode(msg->sysid, msg->compid, &m, &config_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_config_param_int_callback(
-    const mavlink_phoenix::CONFIG_PARAM_INT::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_INT request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_config_param_int_t config_param_int_out;
-
-  /** ASSIGN FIELDS **/
-
-  config_param_int_out.config_id = msg->config_id;
-  config_param_int_out.param_id = msg->param_id;
-  memcpy(&(config_param_int_out.name), &(msg->name[0]),
-         sizeof(char) * (int)(msg->name.size()));
-  config_param_int_out.value = msg->value;
-  config_param_int_out.default_value = msg->default_value;
-  config_param_int_out.min = msg->min;
-  config_param_int_out.max = msg->max;
-
-  mavlink_msg_config_param_int_encode(msg->sysid, msg->compid, &m,
-                                      &config_param_int_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_config_param_bool_callback(
-    const mavlink_phoenix::CONFIG_PARAM_BOOL::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_BOOL request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_config_param_bool_t config_param_bool_out;
-
-  /** ASSIGN FIELDS **/
-
-  config_param_bool_out.config_id = msg->config_id;
-  config_param_bool_out.param_id = msg->param_id;
-  memcpy(&(config_param_bool_out.name), &(msg->name[0]),
-         sizeof(char) * (int)(msg->name.size()));
-  config_param_bool_out.value = msg->value;
-  config_param_bool_out.default_value = msg->default_value;
-
-  mavlink_msg_config_param_bool_encode(msg->sysid, msg->compid, &m,
-                                       &config_param_bool_out);
-  uint16_t len = mavlink_msg_to_send_buffer(data, &m);
-  write_to_mav(data, len);
-}
-/**
- *
- */
-void to_mav_config_param_float_callback(
-    const mavlink_phoenix::CONFIG_PARAM_FLOAT::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_FLOAT request");
-
-  uint8_t data[MAVLINK_MAX_PACKET_LEN];
-  mavlink_message_t m;
-
-  m.sysid = msg->sysid;
-  m.compid = msg->compid;
-
-  mavlink_config_param_float_t config_param_float_out;
-
-  /** ASSIGN FIELDS **/
-
-  config_param_float_out.config_id = msg->config_id;
-  config_param_float_out.param_id = msg->param_id;
-  memcpy(&(config_param_float_out.name), &(msg->name[0]),
-         sizeof(char) * (int)(msg->name.size()));
-  config_param_float_out.value = msg->value;
-  config_param_float_out.default_value = msg->default_value;
-  config_param_float_out.min = msg->min;
-  config_param_float_out.max = msg->max;
-
-  mavlink_msg_config_param_float_encode(msg->sysid, msg->compid, &m,
-                                        &config_param_float_out);
   uint16_t len = mavlink_msg_to_send_buffer(data, &m);
   write_to_mav(data, len);
 }
@@ -899,38 +387,6 @@ void from_mav_mav_raw_data_callback(
 
         from_mav_telemetry_pub.publish(m);
       } break;
-      case MAVLINK_MSG_ID_CONTROL_LIGHTS: {
-        mavlink_phoenix::CONTROL_LIGHTS m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_control_lights_t control_lights_in;
-        memset(&control_lights_in, 0, sizeof(control_lights_in));
-        mavlink_msg_control_lights_decode(&mav_msg, &control_lights_in);
-
-        memcpy(&(m.colors), &(control_lights_in.colors), sizeof(uint32_t) * 15);
-
-        from_mav_control_lights_pub.publish(m);
-      } break;
-      case MAVLINK_MSG_ID_CONTROL_COMMAND: {
-        mavlink_phoenix::CONTROL_COMMAND m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_control_command_t control_command_in;
-        memset(&control_command_in, 0, sizeof(control_command_in));
-        mavlink_msg_control_command_decode(&mav_msg, &control_command_in);
-
-        m.velocity = control_command_in.velocity;
-        m.steering_front = control_command_in.steering_front;
-        m.steering_rear = control_command_in.steering_rear;
-        m.indicator_left = control_command_in.indicator_left;
-        m.indicator_right = control_command_in.indicator_right;
-
-        from_mav_control_command_pub.publish(m);
-      } break;
       case MAVLINK_MSG_ID_IMU: {
         mavlink_phoenix::IMU m;
 
@@ -1090,51 +546,6 @@ void from_mav_mav_raw_data_callback(
 
         from_mav_parking_lot_pub.publish(m);
       } break;
-      case MAVLINK_MSG_ID_CONFIG_REQUEST_COUNT: {
-        mavlink_phoenix::CONFIG_REQUEST_COUNT m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_request_count_t config_request_count_in;
-        memset(&config_request_count_in, 0, sizeof(config_request_count_in));
-        mavlink_msg_config_request_count_decode(&mav_msg,
-                                                &config_request_count_in);
-
-        m.dummy = config_request_count_in.dummy;
-
-        from_mav_config_request_count_pub.publish(m);
-      } break;
-      case MAVLINK_MSG_ID_CONFIG_REQUEST: {
-        mavlink_phoenix::CONFIG_REQUEST m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_request_t config_request_in;
-        memset(&config_request_in, 0, sizeof(config_request_in));
-        mavlink_msg_config_request_decode(&mav_msg, &config_request_in);
-
-        m.config_id = config_request_in.config_id;
-
-        from_mav_config_request_pub.publish(m);
-      } break;
-      case MAVLINK_MSG_ID_CONFIG_REQUEST_PARAMS: {
-        mavlink_phoenix::CONFIG_REQUEST_PARAMS m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_request_params_t config_request_params_in;
-        memset(&config_request_params_in, 0, sizeof(config_request_params_in));
-        mavlink_msg_config_request_params_decode(&mav_msg,
-                                                 &config_request_params_in);
-
-        m.config_id = config_request_params_in.config_id;
-        m.param_id = config_request_params_in.param_id;
-
-        from_mav_config_request_params_pub.publish(m);
-      } break;
       case MAVLINK_MSG_ID_CONFIG_COUNT: {
         mavlink_phoenix::CONFIG_COUNT m;
 
@@ -1223,58 +634,6 @@ void from_mav_mav_raw_data_callback(
 
         from_mav_config_param_float_pub.publish(m);
       } break;
-      case MAVLINK_MSG_ID_CONFIG_PARAM_SET_INT: {
-        mavlink_phoenix::CONFIG_PARAM_SET_INT m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_param_set_int_t config_param_set_int_in;
-        memset(&config_param_set_int_in, 0, sizeof(config_param_set_int_in));
-        mavlink_msg_config_param_set_int_decode(&mav_msg,
-                                                &config_param_set_int_in);
-
-        m.config_id = config_param_set_int_in.config_id;
-        m.param_id = config_param_set_int_in.param_id;
-        m.value = config_param_set_int_in.value;
-
-        from_mav_config_param_set_int_pub.publish(m);
-      } break;
-      case MAVLINK_MSG_ID_CONFIG_PARAM_SET_BOOL: {
-        mavlink_phoenix::CONFIG_PARAM_SET_BOOL m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_param_set_bool_t config_param_set_bool_in;
-        memset(&config_param_set_bool_in, 0, sizeof(config_param_set_bool_in));
-        mavlink_msg_config_param_set_bool_decode(&mav_msg,
-                                                 &config_param_set_bool_in);
-
-        m.config_id = config_param_set_bool_in.config_id;
-        m.param_id = config_param_set_bool_in.param_id;
-        m.value = config_param_set_bool_in.value;
-
-        from_mav_config_param_set_bool_pub.publish(m);
-      } break;
-      case MAVLINK_MSG_ID_CONFIG_PARAM_SET_FLOAT: {
-        mavlink_phoenix::CONFIG_PARAM_SET_FLOAT m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
-
-        mavlink_config_param_set_float_t config_param_set_float_in;
-        memset(&config_param_set_float_in, 0,
-               sizeof(config_param_set_float_in));
-        mavlink_msg_config_param_set_float_decode(&mav_msg,
-                                                  &config_param_set_float_in);
-
-        m.config_id = config_param_set_float_in.config_id;
-        m.param_id = config_param_set_float_in.param_id;
-        m.value = config_param_set_float_in.value;
-
-        from_mav_config_param_set_float_pub.publish(m);
-      } break;
       case MAVLINK_MSG_ID_COMMAND: {
         mavlink_phoenix::COMMAND m;
 
@@ -1318,10 +677,6 @@ int main(int argc, char **argv) {
       n.advertise<mavlink_phoenix::DEBUG>("/from_mav_debug", 10);
   from_mav_telemetry_pub =
       n.advertise<mavlink_phoenix::TELEMETRY>("/from_mav_telemetry", 10);
-  from_mav_control_lights_pub = n.advertise<mavlink_phoenix::CONTROL_LIGHTS>(
-      "/from_mav_control_lights", 10);
-  from_mav_control_command_pub = n.advertise<mavlink_phoenix::CONTROL_COMMAND>(
-      "/from_mav_control_command", 10);
   from_mav_imu_pub = n.advertise<mavlink_phoenix::IMU>("/from_mav_imu", 10);
   from_mav_odometer_abs_pub =
       n.advertise<mavlink_phoenix::ODOMETER_ABS>("/from_mav_odometer_abs", 10);
@@ -1338,14 +693,6 @@ int main(int argc, char **argv) {
       n.advertise<mavlink_phoenix::PROXIMITY>("/from_mav_proximity", 10);
   from_mav_parking_lot_pub =
       n.advertise<mavlink_phoenix::PARKING_LOT>("/from_mav_parking_lot", 10);
-  from_mav_config_request_count_pub =
-      n.advertise<mavlink_phoenix::CONFIG_REQUEST_COUNT>(
-          "/from_mav_config_request_count", 10);
-  from_mav_config_request_pub = n.advertise<mavlink_phoenix::CONFIG_REQUEST>(
-      "/from_mav_config_request", 10);
-  from_mav_config_request_params_pub =
-      n.advertise<mavlink_phoenix::CONFIG_REQUEST_PARAMS>(
-          "/from_mav_config_request_params", 10);
   from_mav_config_count_pub =
       n.advertise<mavlink_phoenix::CONFIG_COUNT>("/from_mav_config_count", 10);
   from_mav_config_pub =
@@ -1359,49 +706,16 @@ int main(int argc, char **argv) {
   from_mav_config_param_float_pub =
       n.advertise<mavlink_phoenix::CONFIG_PARAM_FLOAT>(
           "/from_mav_config_param_float", 10);
-  from_mav_config_param_set_int_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_SET_INT>(
-          "/from_mav_config_param_set_int", 10);
-  from_mav_config_param_set_bool_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_SET_BOOL>(
-          "/from_mav_config_param_set_bool", 10);
-  from_mav_config_param_set_float_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_SET_FLOAT>(
-          "/from_mav_config_param_set_float", 10);
   from_mav_command_pub =
       n.advertise<mavlink_phoenix::COMMAND>("/from_mav_command", 10);
 
   /**
    * Messages Subscribers Declaration
    */
-  ros::Subscriber to_mav_notification_sub =
-      n.subscribe("/to_mav_notification", 10, to_mav_notification_callback);
-  ros::Subscriber to_mav_heartbeat_sub =
-      n.subscribe("/to_mav_heartbeat", 10, to_mav_heartbeat_callback);
-  ros::Subscriber to_mav_debug_sub =
-      n.subscribe("/to_mav_debug", 10, to_mav_debug_callback);
-  ros::Subscriber to_mav_telemetry_sub =
-      n.subscribe("/to_mav_telemetry", 10, to_mav_telemetry_callback);
   ros::Subscriber to_mav_control_lights_sub =
       n.subscribe("/to_mav_control_lights", 10, to_mav_control_lights_callback);
   ros::Subscriber to_mav_control_command_sub = n.subscribe(
       "/to_mav_control_command", 10, to_mav_control_command_callback);
-  ros::Subscriber to_mav_imu_sub =
-      n.subscribe("/to_mav_imu", 10, to_mav_imu_callback);
-  ros::Subscriber to_mav_odometer_abs_sub =
-      n.subscribe("/to_mav_odometer_abs", 10, to_mav_odometer_abs_callback);
-  ros::Subscriber to_mav_odometer_raw_sub =
-      n.subscribe("/to_mav_odometer_raw", 10, to_mav_odometer_raw_callback);
-  ros::Subscriber to_mav_odometer_delta_sub =
-      n.subscribe("/to_mav_odometer_delta", 10, to_mav_odometer_delta_callback);
-  ros::Subscriber to_mav_odometer_delta_raw_sub = n.subscribe(
-      "/to_mav_odometer_delta_raw", 10, to_mav_odometer_delta_raw_callback);
-  ros::Subscriber to_mav_odometer_sub =
-      n.subscribe("/to_mav_odometer", 10, to_mav_odometer_callback);
-  ros::Subscriber to_mav_proximity_sub =
-      n.subscribe("/to_mav_proximity", 10, to_mav_proximity_callback);
-  ros::Subscriber to_mav_parking_lot_sub =
-      n.subscribe("/to_mav_parking_lot", 10, to_mav_parking_lot_callback);
   ros::Subscriber to_mav_config_request_count_sub = n.subscribe(
       "/to_mav_config_request_count", 10, to_mav_config_request_count_callback);
   ros::Subscriber to_mav_config_request_sub =
@@ -1409,16 +723,6 @@ int main(int argc, char **argv) {
   ros::Subscriber to_mav_config_request_params_sub =
       n.subscribe("/to_mav_config_request_params", 10,
                   to_mav_config_request_params_callback);
-  ros::Subscriber to_mav_config_count_sub =
-      n.subscribe("/to_mav_config_count", 10, to_mav_config_count_callback);
-  ros::Subscriber to_mav_config_sub =
-      n.subscribe("/to_mav_config", 10, to_mav_config_callback);
-  ros::Subscriber to_mav_config_param_int_sub = n.subscribe(
-      "/to_mav_config_param_int", 10, to_mav_config_param_int_callback);
-  ros::Subscriber to_mav_config_param_bool_sub = n.subscribe(
-      "/to_mav_config_param_bool", 10, to_mav_config_param_bool_callback);
-  ros::Subscriber to_mav_config_param_float_sub = n.subscribe(
-      "/to_mav_config_param_float", 10, to_mav_config_param_float_callback);
   ros::Subscriber to_mav_config_param_set_int_sub = n.subscribe(
       "/to_mav_config_param_set_int", 10, to_mav_config_param_set_int_callback);
   ros::Subscriber to_mav_config_param_set_bool_sub =
