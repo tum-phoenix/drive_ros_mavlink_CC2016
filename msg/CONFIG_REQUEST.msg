@@ -4,4 +4,5 @@
 uint8 ID = 193
 uint8 sysid
 uint8 compid
-uint8 config_id
+
+uint8 config_id     # Id of the config to request

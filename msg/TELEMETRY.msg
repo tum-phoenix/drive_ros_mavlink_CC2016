@@ -4,7 +4,9 @@
 uint8 ID = 3
 uint8 sysid
 uint8 compid
-uint32 timestamp
+
+Header header
+
 float32 xacc
 float32 yacc
 float32 zacc
@@ -31,3 +33,16 @@ uint16 pwm_servo_rear
 uint16 battery_voltage
 uint8 remote_control
 uint8 drive_mode
+
+
+uint8 REMOTE_CONTROL_STATUS_DISCONNECTED = 0     # Remote Control is not connected to the system
+uint8 REMOTE_CONTROL_STATUS_CONNECTED = 1        # Remote Control connection is established
+uint8 REMOTE_CONTROL_STATUS_AUTONOMOUS = 2       # Remote Control is connected and under active control
+uint8 REMOTE_CONTROL_STATUS_SEMI_AUTONOMOUS = 3  # Remote Control is connected and under active control
+uint8 REMOTE_CONTROL_STATUS_MANUAL = 4           # Remote Control is connected and under active control
+
+
+uint8 DRIVE_MODE_TRACK = 0              # Track (excluding obstacles)
+uint8 DRIVE_MODE_TRACK_OBSTACLES = 1    # Track including obstacles
+uint8 DRIVE_MODE_PARKING = 2            # Parking mode
+uint8 DRIVE_MODE_IDLE = 3               # Idle mode

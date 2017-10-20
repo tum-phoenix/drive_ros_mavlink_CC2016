@@ -4,6 +4,7 @@
 uint8 ID = 196
 uint8 sysid
 uint8 compid
-uint8 config_id
-char[30] name
-uint16 param_id_mask
+
+uint8 config_id         # ID of the configuration set
+char[30] name           # Name of the configuration set
+uint16 param_id_mask    # Bitmask indicating which param ids are used (LSB = id 0)

@@ -4,12 +4,10 @@
 uint8 ID = 138
 uint8 sysid
 uint8 compid
-uint32 timestamp
-float32 delta
-float32 xdist
-float32 ydist
-float32 zdist
-float32 xvelocity
-float32 yvelocity
-float32 zvelocity
-int16 quality
+
+Header header
+
+float32 delta                   # Time-delta within which the measurement has taken place [s]
+geometry_msgs/Vector3 dist      # Distance travelled within period [m]
+geometry_msgs/Vector3 velocity  # Velocity [m/s]
+int16 quality                   # Measurement quality indicator (-1 for no quality)

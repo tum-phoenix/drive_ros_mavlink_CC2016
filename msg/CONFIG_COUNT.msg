@@ -4,4 +4,5 @@
 uint8 ID = 195
 uint8 sysid
 uint8 compid
-uint32 config_id_mask
+
+uint32 config_id_mask       # Bitmask indicating which ids are used (LSB = id 0)

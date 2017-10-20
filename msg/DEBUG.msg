@@ -4,5 +4,7 @@
 uint8 ID = 2
 uint8 sysid
 uint8 compid
-uint32 timestamp
-float32[12] data
+
+Header header
+
+float32[12] data    # Debug data

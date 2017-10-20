@@ -4,10 +4,11 @@
 uint8 ID = 197
 uint8 sysid
 uint8 compid
-uint8 config_id
-uint8 param_id
-char[30] name
-int32 value
-int32 default_value
-int32 min
-int32 max
+
+uint8 config_id         # ID of the configuration set
+uint8 param_id          # ID of the configuration parameter within the config set
+char[30] name           # Name of the configuration parameter
+int32 value             # Current parameter value
+int32 default_value     # default parameter value
+int32 min               # Minimum parameter value
+int32 max               # Maximum parameter value

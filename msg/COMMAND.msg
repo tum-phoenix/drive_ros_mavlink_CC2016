@@ -4,4 +4,8 @@
 uint8 ID = 210
 uint8 sysid
 uint8 compid
-uint8 command
+
+uint8 command   # Command to perform (see COMMAND_TYPE ENUM)
+
+uint8 COMMAND_TYPE_IMU_CALI = 0           # Command: Perform IMU calibration
+uint8 COMMAND_TYPE_SELF_TEST = 1          # Command: Perform self-test of sensor and actor

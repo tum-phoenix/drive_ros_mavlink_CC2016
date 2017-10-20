@@ -4,5 +4,7 @@
 uint8 ID = 144
 uint8 sysid
 uint8 compid
-uint32 timestamp
-float32 distance
+
+Header header
+
+float32 distance    # Distance to obstacle [m]

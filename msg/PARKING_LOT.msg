@@ -4,6 +4,8 @@
 uint8 ID = 150
 uint8 sysid
 uint8 compid
-uint32 timestamp
-float32 parking_lot_size
-float32 parking_lot_position
+
+Header header
+
+float32 parking_lot_size        # Size of the parking lot [m]
+float32 parking_lot_position    # Position of the second edge of the parking lot [m]

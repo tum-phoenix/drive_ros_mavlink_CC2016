@@ -4,6 +4,7 @@
  **/
 #include <mavlink_phoenix/mavlink2ros.h>
 #include <mavlink_phoenix/phoenix/mavlink.h>
+#include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
 
 mavlink_message_t mav_msg; //! Global mavlink message
@@ -33,6 +34,34 @@ ros::Publisher from_mav_config_param_bool_pub;
 ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
 
+static ros::Duration time_offset;
+
+
+ros::Time convert_time(uint32_t usec)
+{
+
+  // convert usec to sec & nsec
+  uint32_t sec  = static_cast<uint32_t>(static_cast<double>(usec)*pow(10, -6));
+  uint32_t nsec = static_cast<uint32_t>(static_cast<double>(usec-sec)*pow(10, 3));
+  ros::Time in_time(sec, nsec);
+
+  ros::Time out = in_time + time_offset;
+
+  ros::Duration diff = ros::Time::now() - out;
+
+  if(abs(diff.sec) > 5)
+  {
+    ROS_INFO("Reset time offset");
+
+    // TODO: maybe use some fancy algorithm to calculate time
+    time_offset = ros::Time::now() - in_time;
+    return ros::Time::now();
+  }
+
+  ROS_INFO_STREAM(" in_sec: " << sec << " in_nsec: " << nsec << " diff_sec: " << diff.sec << " diff_nsec: " << diff.nsec);
+  return out;
+}
+
 /**
  *
  **/
@@ -44,7 +73,7 @@ int write_to_mav(uint8_t *b, int sz) {
   m.data.assign(b, b + sz);
   int rc = m.data.size();
   to_mav_mav_raw_data_publisher.publish(m);
-  ROS_INFO("Writen to MAV %d bytes", rc);
+  ROS_DEBUG("Writen to MAV %d bytes", rc);
   return rc;
 }
 
@@ -53,7 +82,7 @@ int write_to_mav(uint8_t *b, int sz) {
  */
 void to_mav_control_lights_callback(
     const mavlink_phoenix::CONTROL_LIGHTS::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONTROL_LIGHTS request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONTROL_LIGHTS request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -78,7 +107,7 @@ void to_mav_control_lights_callback(
  */
 void to_mav_control_command_callback(
     const mavlink_phoenix::CONTROL_COMMAND::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONTROL_COMMAND request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONTROL_COMMAND request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -106,8 +135,7 @@ void to_mav_control_command_callback(
  */
 void to_mav_config_request_count_callback(
     const mavlink_phoenix::CONFIG_REQUEST_COUNT::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST_COUNT request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST_COUNT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -131,7 +159,7 @@ void to_mav_config_request_count_callback(
  */
 void to_mav_config_request_callback(
     const mavlink_phoenix::CONFIG_REQUEST::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -155,8 +183,7 @@ void to_mav_config_request_callback(
  */
 void to_mav_config_request_params_callback(
     const mavlink_phoenix::CONFIG_REQUEST_PARAMS::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST_PARAMS request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_REQUEST_PARAMS request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -181,8 +208,7 @@ void to_mav_config_request_params_callback(
  */
 void to_mav_config_param_set_int_callback(
     const mavlink_phoenix::CONFIG_PARAM_SET_INT::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_INT request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_INT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -208,8 +234,7 @@ void to_mav_config_param_set_int_callback(
  */
 void to_mav_config_param_set_bool_callback(
     const mavlink_phoenix::CONFIG_PARAM_SET_BOOL::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_BOOL request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_BOOL request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -235,8 +260,7 @@ void to_mav_config_param_set_bool_callback(
  */
 void to_mav_config_param_set_float_callback(
     const mavlink_phoenix::CONFIG_PARAM_SET_FLOAT::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_FLOAT request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_CONFIG_PARAM_SET_FLOAT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -261,7 +285,7 @@ void to_mav_config_param_set_float_callback(
  *
  */
 void to_mav_command_callback(const mavlink_phoenix::COMMAND::ConstPtr &msg) {
-  ROS_INFO("[mavlink_phoenix] Received a  'to_mav_COMMAND request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'to_mav_COMMAND request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
   mavlink_message_t m;
@@ -285,8 +309,7 @@ void to_mav_command_callback(const mavlink_phoenix::COMMAND::ConstPtr &msg) {
  */
 void from_mav_mav_raw_data_callback(
     const mavlink_phoenix::MAV_RAW_DATA::ConstPtr &msg) {
-  ROS_INFO(
-      "[mavlink_phoenix] Received a  'from_mav_mav_raw_data_callback request");
+  ROS_DEBUG("[mavlink_phoenix] Received a  'from_mav_mav_raw_data_callback request");
 
   for (int i = 0; i < msg->data.size(); ++i) {
     // Try to get a new message
@@ -304,7 +327,7 @@ void from_mav_mav_raw_data_callback(
         memset(&notification_in, 0, sizeof(notification_in));
         mavlink_msg_notification_decode(&mav_msg, &notification_in);
 
-        m.timestamp = notification_in.timestamp;
+        m.header.stamp = convert_time(notification_in.timestamp);
         m.type = notification_in.type;
         memcpy(&(m.description), &(notification_in.description),
                sizeof(char) * 50);
@@ -322,7 +345,8 @@ void from_mav_mav_raw_data_callback(
         memset(&heartbeat_in, 0, sizeof(heartbeat_in));
         mavlink_msg_heartbeat_decode(&mav_msg, &heartbeat_in);
 
-        m.timestamp = heartbeat_in.timestamp;
+        m.header.stamp = convert_time(heartbeat_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
         m.battery_voltage = heartbeat_in.battery_voltage;
         m.remote_control = heartbeat_in.remote_control;
         m.drive_mode = heartbeat_in.drive_mode;
@@ -342,7 +366,7 @@ void from_mav_mav_raw_data_callback(
         memset(&debug_in, 0, sizeof(debug_in));
         mavlink_msg_debug_decode(&mav_msg, &debug_in);
 
-        m.timestamp = debug_in.timestamp;
+        m.header.stamp = convert_time(debug_in.timestamp);
         memcpy(&(m.data), &(debug_in.data), sizeof(float) * 12);
 
         from_mav_debug_pub.publish(m);
@@ -357,7 +381,7 @@ void from_mav_mav_raw_data_callback(
         memset(&telemetry_in, 0, sizeof(telemetry_in));
         mavlink_msg_telemetry_decode(&mav_msg, &telemetry_in);
 
-        m.timestamp = telemetry_in.timestamp;
+        m.header.stamp = convert_time(telemetry_in.timestamp);
         m.xacc = telemetry_in.xacc;
         m.yacc = telemetry_in.yacc;
         m.zacc = telemetry_in.zacc;
@@ -397,16 +421,17 @@ void from_mav_mav_raw_data_callback(
         memset(&imu_in, 0, sizeof(imu_in));
         mavlink_msg_imu_decode(&mav_msg, &imu_in);
 
-        m.timestamp = imu_in.timestamp;
-        m.xacc = imu_in.xacc;
-        m.yacc = imu_in.yacc;
-        m.zacc = imu_in.zacc;
-        m.xgyro = imu_in.xgyro;
-        m.ygyro = imu_in.ygyro;
-        m.zgyro = imu_in.zgyro;
-        m.xmag = imu_in.xmag;
-        m.ymag = imu_in.ymag;
-        m.zmag = imu_in.zmag;
+        m.header.stamp = convert_time(imu_in.timestamp);
+        m.header.frame_id = "imu";
+        m.acc.x = imu_in.xacc;
+        m.acc.y = imu_in.yacc;
+        m.acc.z = imu_in.zacc;
+        m.gyro.x = imu_in.xgyro;
+        m.gyro.y = imu_in.ygyro;
+        m.gyro.z = imu_in.zgyro;
+        m.mag.x = imu_in.xmag;
+        m.mag.y = imu_in.ymag;
+        m.mag.z = imu_in.zmag;
 
         from_mav_imu_pub.publish(m);
       } break;
@@ -420,13 +445,14 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_abs_in, 0, sizeof(odometer_abs_in));
         mavlink_msg_odometer_abs_decode(&mav_msg, &odometer_abs_in);
 
-        m.timestamp = odometer_abs_in.timestamp;
-        m.xdist = odometer_abs_in.xdist;
-        m.ydist = odometer_abs_in.ydist;
-        m.zdist = odometer_abs_in.zdist;
-        m.xvelocity = odometer_abs_in.xvelocity;
-        m.yvelocity = odometer_abs_in.yvelocity;
-        m.zvelocity = odometer_abs_in.zvelocity;
+        m.header.stamp = convert_time(odometer_abs_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
+        m.dist.x = odometer_abs_in.xdist;
+        m.dist.y = odometer_abs_in.ydist;
+        m.dist.z = odometer_abs_in.zdist;
+        m.velocity.x = odometer_abs_in.xvelocity;
+        m.velocity.y = odometer_abs_in.yvelocity;
+        m.velocity.z = odometer_abs_in.zvelocity;
         m.quality = odometer_abs_in.quality;
 
         from_mav_odometer_abs_pub.publish(m);
@@ -441,10 +467,11 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_raw_in, 0, sizeof(odometer_raw_in));
         mavlink_msg_odometer_raw_decode(&mav_msg, &odometer_raw_in);
 
-        m.timestamp = odometer_raw_in.timestamp;
-        m.xdist = odometer_raw_in.xdist;
-        m.ydist = odometer_raw_in.ydist;
-        m.zdist = odometer_raw_in.zdist;
+        m.header.stamp = convert_time(odometer_raw_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
+        m.dist.x = odometer_raw_in.xdist;
+        m.dist.y = odometer_raw_in.ydist;
+        m.dist.z = odometer_raw_in.zdist;
         m.quality = odometer_raw_in.quality;
 
         from_mav_odometer_raw_pub.publish(m);
@@ -459,14 +486,15 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_delta_in, 0, sizeof(odometer_delta_in));
         mavlink_msg_odometer_delta_decode(&mav_msg, &odometer_delta_in);
 
-        m.timestamp = odometer_delta_in.timestamp;
+        m.header.stamp = convert_time(odometer_delta_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
         m.delta = odometer_delta_in.delta;
-        m.xdist = odometer_delta_in.xdist;
-        m.ydist = odometer_delta_in.ydist;
-        m.zdist = odometer_delta_in.zdist;
-        m.xvelocity = odometer_delta_in.xvelocity;
-        m.yvelocity = odometer_delta_in.yvelocity;
-        m.zvelocity = odometer_delta_in.zvelocity;
+        m.dist.x = odometer_delta_in.xdist;
+        m.dist.y = odometer_delta_in.ydist;
+        m.dist.z = odometer_delta_in.zdist;
+        m.velocity.x = odometer_delta_in.xvelocity;
+        m.velocity.y = odometer_delta_in.yvelocity;
+        m.velocity.z = odometer_delta_in.zvelocity;
         m.quality = odometer_delta_in.quality;
 
         from_mav_odometer_delta_pub.publish(m);
@@ -481,11 +509,12 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_delta_raw_in, 0, sizeof(odometer_delta_raw_in));
         mavlink_msg_odometer_delta_raw_decode(&mav_msg, &odometer_delta_raw_in);
 
-        m.timestamp = odometer_delta_raw_in.timestamp;
+        m.header.stamp = convert_time(odometer_delta_raw_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
         m.delta = odometer_delta_raw_in.delta;
-        m.xdist = odometer_delta_raw_in.xdist;
-        m.ydist = odometer_delta_raw_in.ydist;
-        m.zdist = odometer_delta_raw_in.zdist;
+        m.dist.x = odometer_delta_raw_in.xdist;
+        m.dist.y = odometer_delta_raw_in.ydist;
+        m.dist.z = odometer_delta_raw_in.zdist;
         m.quality = odometer_delta_raw_in.quality;
 
         from_mav_odometer_delta_raw_pub.publish(m);
@@ -500,17 +529,18 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_in, 0, sizeof(odometer_in));
         mavlink_msg_odometer_decode(&mav_msg, &odometer_in);
 
-        m.timestamp = odometer_in.timestamp;
+        m.header.stamp = convert_time(odometer_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
         m.time_delta = odometer_in.time_delta;
-        m.xdist_delta = odometer_in.xdist_delta;
-        m.ydist_delta = odometer_in.ydist_delta;
-        m.zdist_delta = odometer_in.zdist_delta;
-        m.xdist_abs = odometer_in.xdist_abs;
-        m.ydist_abs = odometer_in.ydist_abs;
-        m.zdist_abs = odometer_in.zdist_abs;
-        m.xvelocity = odometer_in.xvelocity;
-        m.yvelocity = odometer_in.yvelocity;
-        m.zvelocity = odometer_in.zvelocity;
+        m.dist_delta.x = odometer_in.xdist_delta;
+        m.dist_delta.y = odometer_in.ydist_delta;
+        m.dist_delta.z = odometer_in.zdist_delta;
+        m.dist_abs.x = odometer_in.xdist_abs;
+        m.dist_abs.y = odometer_in.ydist_abs;
+        m.dist_abs.z = odometer_in.zdist_abs;
+        m.velocity.x = odometer_in.xvelocity;
+        m.velocity.y = odometer_in.yvelocity;
+        m.velocity.z = odometer_in.zvelocity;
         m.quality = odometer_in.quality;
 
         from_mav_odometer_pub.publish(m);
@@ -525,7 +555,7 @@ void from_mav_mav_raw_data_callback(
         memset(&proximity_in, 0, sizeof(proximity_in));
         mavlink_msg_proximity_decode(&mav_msg, &proximity_in);
 
-        m.timestamp = proximity_in.timestamp;
+        m.header.stamp = convert_time(proximity_in.timestamp);
         m.distance = proximity_in.distance;
 
         from_mav_proximity_pub.publish(m);
@@ -540,7 +570,8 @@ void from_mav_mav_raw_data_callback(
         memset(&parking_lot_in, 0, sizeof(parking_lot_in));
         mavlink_msg_parking_lot_decode(&mav_msg, &parking_lot_in);
 
-        m.timestamp = parking_lot_in.timestamp;
+        m.header.stamp = convert_time(parking_lot_in.timestamp);
+        m.header.frame_id = "side_lightswitch";
         m.parking_lot_size = parking_lot_in.parking_lot_size;
         m.parking_lot_position = parking_lot_in.parking_lot_position;
 
@@ -661,78 +692,43 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   ros::Rate loop_rate(100);
 
-  to_mav_mav_raw_data_publisher =
-      n.advertise<mavlink_phoenix::MAV_RAW_DATA>("/to_mav_mav_raw_data", 10);
-  from_mav_mav_raw_data_subscriber =
-      n.subscribe("/from_mav_mav_raw_data", 10, from_mav_mav_raw_data_callback);
+  to_mav_mav_raw_data_publisher =     n.advertise<mavlink_phoenix::MAV_RAW_DATA>("/to_mav/mav_raw_data", 10);
+  from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);
 
   /**
    * Messages Publishers Initialization
    */
-  from_mav_notification_pub =
-      n.advertise<mavlink_phoenix::NOTIFICATION>("/from_mav_notification", 10);
-  from_mav_heartbeat_pub =
-      n.advertise<mavlink_phoenix::HEARTBEAT>("/from_mav_heartbeat", 10);
-  from_mav_debug_pub =
-      n.advertise<mavlink_phoenix::DEBUG>("/from_mav_debug", 10);
-  from_mav_telemetry_pub =
-      n.advertise<mavlink_phoenix::TELEMETRY>("/from_mav_telemetry", 10);
-  from_mav_imu_pub = n.advertise<mavlink_phoenix::IMU>("/from_mav_imu", 10);
-  from_mav_odometer_abs_pub =
-      n.advertise<mavlink_phoenix::ODOMETER_ABS>("/from_mav_odometer_abs", 10);
-  from_mav_odometer_raw_pub =
-      n.advertise<mavlink_phoenix::ODOMETER_RAW>("/from_mav_odometer_raw", 10);
-  from_mav_odometer_delta_pub = n.advertise<mavlink_phoenix::ODOMETER_DELTA>(
-      "/from_mav_odometer_delta", 10);
-  from_mav_odometer_delta_raw_pub =
-      n.advertise<mavlink_phoenix::ODOMETER_DELTA_RAW>(
-          "/from_mav_odometer_delta_raw", 10);
-  from_mav_odometer_pub =
-      n.advertise<mavlink_phoenix::ODOMETER>("/from_mav_odometer", 10);
-  from_mav_proximity_pub =
-      n.advertise<mavlink_phoenix::PROXIMITY>("/from_mav_proximity", 10);
-  from_mav_parking_lot_pub =
-      n.advertise<mavlink_phoenix::PARKING_LOT>("/from_mav_parking_lot", 10);
-  from_mav_config_count_pub =
-      n.advertise<mavlink_phoenix::CONFIG_COUNT>("/from_mav_config_count", 10);
-  from_mav_config_pub =
-      n.advertise<mavlink_phoenix::CONFIG>("/from_mav_config", 10);
-  from_mav_config_param_int_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_INT>(
-          "/from_mav_config_param_int", 10);
-  from_mav_config_param_bool_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_BOOL>(
-          "/from_mav_config_param_bool", 10);
-  from_mav_config_param_float_pub =
-      n.advertise<mavlink_phoenix::CONFIG_PARAM_FLOAT>(
-          "/from_mav_config_param_float", 10);
-  from_mav_command_pub =
-      n.advertise<mavlink_phoenix::COMMAND>("/from_mav_command", 10);
+  from_mav_notification_pub =       n.advertise<mavlink_phoenix::NOTIFICATION>("/from_mav/notification", 10);
+  from_mav_heartbeat_pub =          n.advertise<mavlink_phoenix::HEARTBEAT>("/from_mav/heartbeat", 10);
+  from_mav_debug_pub =              n.advertise<mavlink_phoenix::DEBUG>("/from_mav/debug", 10);
+  from_mav_telemetry_pub =          n.advertise<mavlink_phoenix::TELEMETRY>("/from_mav/telemetry", 10);
+  from_mav_imu_pub =                n.advertise<mavlink_phoenix::IMU>("/from_mav/imu", 10);
+  from_mav_odometer_abs_pub =       n.advertise<mavlink_phoenix::ODOMETER_ABS>("/from_mav/odometer_abs", 10);
+  from_mav_odometer_raw_pub =       n.advertise<mavlink_phoenix::ODOMETER_RAW>("/from_mav/odometer_raw", 10);
+  from_mav_odometer_delta_pub =     n.advertise<mavlink_phoenix::ODOMETER_DELTA>("/from_mav/odometer_delta", 10);
+  from_mav_odometer_delta_raw_pub = n.advertise<mavlink_phoenix::ODOMETER_DELTA_RAW>("/from_mav/odometer_delta_raw", 10);
+  from_mav_odometer_pub =           n.advertise<mavlink_phoenix::ODOMETER>("/from_mav/odometer", 10);
+  from_mav_proximity_pub =          n.advertise<mavlink_phoenix::PROXIMITY>("/from_mav/proximity", 10);
+  from_mav_parking_lot_pub =        n.advertise<mavlink_phoenix::PARKING_LOT>("/from_mav/parking_lot", 10);
+  from_mav_config_count_pub =       n.advertise<mavlink_phoenix::CONFIG_COUNT>("/from_mav/config_count", 10);
+  from_mav_config_pub =             n.advertise<mavlink_phoenix::CONFIG>("/from_mav/config", 10);
+  from_mav_config_param_int_pub =   n.advertise<mavlink_phoenix::CONFIG_PARAM_INT>("/from_mav/config_param_int", 10);
+  from_mav_config_param_bool_pub =  n.advertise<mavlink_phoenix::CONFIG_PARAM_BOOL>("/from_mav/config_param_bool", 10);
+  from_mav_config_param_float_pub = n.advertise<mavlink_phoenix::CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
+  from_mav_command_pub =            n.advertise<mavlink_phoenix::COMMAND>("/from_mav/command", 10);
 
   /**
    * Messages Subscribers Declaration
    */
-  ros::Subscriber to_mav_control_lights_sub =
-      n.subscribe("/to_mav_control_lights", 10, to_mav_control_lights_callback);
-  ros::Subscriber to_mav_control_command_sub = n.subscribe(
-      "/to_mav_control_command", 10, to_mav_control_command_callback);
-  ros::Subscriber to_mav_config_request_count_sub = n.subscribe(
-      "/to_mav_config_request_count", 10, to_mav_config_request_count_callback);
-  ros::Subscriber to_mav_config_request_sub =
-      n.subscribe("/to_mav_config_request", 10, to_mav_config_request_callback);
-  ros::Subscriber to_mav_config_request_params_sub =
-      n.subscribe("/to_mav_config_request_params", 10,
-                  to_mav_config_request_params_callback);
-  ros::Subscriber to_mav_config_param_set_int_sub = n.subscribe(
-      "/to_mav_config_param_set_int", 10, to_mav_config_param_set_int_callback);
-  ros::Subscriber to_mav_config_param_set_bool_sub =
-      n.subscribe("/to_mav_config_param_set_bool", 10,
-                  to_mav_config_param_set_bool_callback);
-  ros::Subscriber to_mav_config_param_set_float_sub =
-      n.subscribe("/to_mav_config_param_set_float", 10,
-                  to_mav_config_param_set_float_callback);
-  ros::Subscriber to_mav_command_sub =
-      n.subscribe("/to_mav_command", 10, to_mav_command_callback);
+  ros::Subscriber to_mav_control_lights_sub =         n.subscribe("/to_mav/control_lights", 10, to_mav_control_lights_callback);
+  ros::Subscriber to_mav_control_command_sub =        n.subscribe("/to_mav/control_command", 10, to_mav_control_command_callback);
+  ros::Subscriber to_mav_config_request_count_sub =   n.subscribe("/to_mav/config_request_count", 10, to_mav_config_request_count_callback);
+  ros::Subscriber to_mav_config_request_sub =         n.subscribe("/to_mav/config_request", 10, to_mav_config_request_callback);
+  ros::Subscriber to_mav_config_request_params_sub =  n.subscribe("/to_mav/config_request_params", 10, to_mav_config_request_params_callback);
+  ros::Subscriber to_mav_config_param_set_int_sub =   n.subscribe("/to_mav/config_param_set_int", 10, to_mav_config_param_set_int_callback);
+  ros::Subscriber to_mav_config_param_set_bool_sub =  n.subscribe("/to_mav/config_param_set_bool", 10, to_mav_config_param_set_bool_callback);
+  ros::Subscriber to_mav_config_param_set_float_sub = n.subscribe("/to_mav/config_param_set_float", 10, to_mav_config_param_set_float_callback);
+  ros::Subscriber to_mav_command_sub =                n.subscribe("/to_mav/command", 10, to_mav_command_callback);
 
   ros::spin();
   return 0;

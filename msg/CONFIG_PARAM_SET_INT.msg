@@ -4,6 +4,7 @@
 uint8 ID = 200
 uint8 sysid
 uint8 compid
-uint8 config_id
-uint8 param_id
-int32 value
+
+uint8 config_id     # ID of the configuration set
+uint8 param_id      # ID of the configuration parameter within the config set
+int32 value         # New parameter value
