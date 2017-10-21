@@ -35,6 +35,7 @@ ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
 
 static ros::Duration time_offset;
+static int reset_offset_sec = 0;
 
 
 ros::Time convert_time(uint32_t usec)
@@ -46,19 +47,21 @@ ros::Time convert_time(uint32_t usec)
   ros::Time in_time(sec, nsec);
 
   ros::Time out = in_time + time_offset;
+  ros::Time now = ros::Time::now();
 
-  ros::Duration diff = ros::Time::now() - out;
+  ros::Duration diff = now - out;
 
-  if(abs(diff.sec) > 5)
+  //ROS_DEBUG_STREAM(" mav_sec: " << sec << " ros_sec: " << now.sec << " diff_sec: " << diff.sec << " reset_off_sec: " << reset_offset_sec);
+
+  if(abs(diff.sec) > reset_offset_sec)
   {
-    ROS_INFO("Reset time offset");
+    ROS_WARN("Reset time offset");
 
     // TODO: maybe use some fancy algorithm to calculate time
-    time_offset = ros::Time::now() - in_time;
-    return ros::Time::now();
+    time_offset = now - in_time;
+    return now;
   }
 
-  ROS_INFO_STREAM(" in_sec: " << sec << " in_nsec: " << nsec << " diff_sec: " << diff.sec << " diff_nsec: " << diff.nsec);
   return out;
 }
 
@@ -690,7 +693,9 @@ void from_mav_mav_raw_data_callback(
 int main(int argc, char **argv) {
   ros::init(argc, argv, "mavlink_phoenix_node");
   ros::NodeHandle n;
-  ros::Rate loop_rate(100);
+  ros::NodeHandle pnh("~");
+
+  pnh.param<int>("reset_offset_sec", reset_offset_sec, 0);
 
   to_mav_mav_raw_data_publisher =     n.advertise<mavlink_phoenix::MAV_RAW_DATA>("/to_mav/mav_raw_data", 10);
   from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);

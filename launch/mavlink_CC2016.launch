@@ -1,0 +1,9 @@
+<launch>
+
+<node name="mavlink" pkg="mavlink_phoenix" type="mavlink_phoenix_node" output="screen">
+    <!-- reset time offset between mavlink and ros after reaching this threashold [sec] -->
+    <param name="reset_offset_sec" type="int" value="0" />
+</node>
+
+</launch>
+

@@ -1,8 +1,0 @@
-<launch>
-
-<node name="mavlink" pkg="mavlink_phoenix" type="mavlink_phoenix_node" />
-
-<node name="mavlink_device" pkg="mavlink_phoenix_device" type="mavlink_device_node.py" output="screen" />
-
-</launch>
-
