@@ -27,9 +27,5 @@
 #include <mavlink_phoenix/CONFIG_PARAM_SET_BOOL.h>
 #include <mavlink_phoenix/CONFIG_PARAM_SET_FLOAT.h>
 #include <mavlink_phoenix/COMMAND.h>
-#include <mavlink_phoenix/E_NOTIFICATION_TYPE.h>
-#include <mavlink_phoenix/E_REMOTE_CONTROL_STATUS.h>
-#include <mavlink_phoenix/E_DRIVE_MODE.h>
-#include <mavlink_phoenix/E_COMMAND_TYPE.h>
 #include <mavlink_phoenix/MAV_RAW_DATA.h>
 #endif // MAVLINK_PHOENIX_MAVLINK2ROS_H
