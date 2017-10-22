@@ -7,6 +7,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <mavlink_phoenix/TIMES.h>
 #include <ros/ros.h>
+#include <cmath>
 
 mavlink_message_t mav_msg; //! Global mavlink message
 mavlink_status_t status;   //! Global mavlink status
@@ -67,13 +68,14 @@ ros::Time convert_time(const uint32_t usec)
 
   double diff_double = convert_RosDuration_2_Double(diff_time);
 
-  if(abs(diff_double) > reset_offset_sec)
+  if(fabs(diff_double) > reset_offset_sec)
   {
     ROS_WARN("Reset time offset");
 
     // TODO: maybe use some fancy algorithm to calculate time
     time_offset = ros_time - mav_time;
     out_time = ros_time;
+    diff_time = ros::Duration(0,0);
   }
 
   // publish times for debugging purposes
@@ -82,12 +84,12 @@ ros::Time convert_time(const uint32_t usec)
     mavlink_phoenix::TIMES msg;
     msg.diff_time = diff_time;
     msg.mav_time = mav_time;
-    msg.ros_time = ros_time;
+    msg.ros_time = out_time;
     msg.header.stamp = ros_time;
     debug_pub.publish(msg);
   }
 
-  ROS_DEBUG_STREAM(" mav_sec: " << sec << " ros_sec: " << ros_time.sec << " diff_sec: " << diff_time.sec << " reset_off_sec: " << reset_offset_sec);
+  ROS_DEBUG_STREAM(" mav_sec: " << sec << " ros_sec: " << ros_time.sec << " diff_sec: " << diff_time.sec << " diff_double: " << diff_double << " reset_off_sec: " << reset_offset_sec);
 
   return out_time;
 }
