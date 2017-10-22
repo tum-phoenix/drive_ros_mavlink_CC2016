@@ -6,7 +6,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   geometry_msgs
   message_generation
-
 )
 
 add_message_files(
@@ -38,12 +37,12 @@ add_message_files(
         CONFIG_PARAM_SET_BOOL.msg
         CONFIG_PARAM_SET_FLOAT.msg
         COMMAND.msg
+        TIMES.msg
 
 )
 generate_messages(
     DEPENDENCIES
     geometry_msgs
-    std_msgs
 
 )
 catkin_package(

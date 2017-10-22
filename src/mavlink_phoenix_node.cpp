@@ -5,6 +5,7 @@
 #include <mavlink_phoenix/mavlink2ros.h>
 #include <mavlink_phoenix/phoenix/mavlink.h>
 #include <geometry_msgs/Vector3.h>
+#include <mavlink_phoenix/TIMES.h>
 #include <ros/ros.h>
 
 mavlink_message_t mav_msg; //! Global mavlink message
@@ -33,36 +34,62 @@ ros::Publisher from_mav_config_param_int_pub;
 ros::Publisher from_mav_config_param_bool_pub;
 ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
+ros::Publisher debug_pub;
 
 static ros::Duration time_offset;
-static int reset_offset_sec = 0;
+static double reset_offset_sec;
+static bool enable_time_debug;
 
 
-ros::Time convert_time(uint32_t usec)
+double convert_RosTime_2_Double(const ros::Time in)
+{
+  return (double)in.sec + (double)in.nsec * pow(10, -9);
+}
+
+
+double convert_RosDuration_2_Double(const ros::Duration in)
+{
+  return (double)in.sec + (double)in.nsec * pow(10, -9);
+}
+
+
+ros::Time convert_time(const uint32_t usec)
 {
 
   // convert usec to sec & nsec
   uint32_t sec  = static_cast<uint32_t>(static_cast<double>(usec)*pow(10, -6));
   uint32_t nsec = static_cast<uint32_t>(static_cast<double>(usec-sec)*pow(10, 3));
-  ros::Time in_time(sec, nsec);
 
-  ros::Time out = in_time + time_offset;
-  ros::Time now = ros::Time::now();
+  ros::Time mav_time(sec, nsec);
+  ros::Time out_time = mav_time + time_offset;
+  ros::Time ros_time = ros::Time::now();
+  ros::Duration diff_time = ros_time - out_time;
 
-  ros::Duration diff = now - out;
+  double diff_double = convert_RosDuration_2_Double(diff_time);
 
-  //ROS_DEBUG_STREAM(" mav_sec: " << sec << " ros_sec: " << now.sec << " diff_sec: " << diff.sec << " reset_off_sec: " << reset_offset_sec);
-
-  if(abs(diff.sec) > reset_offset_sec)
+  if(abs(diff_double) > reset_offset_sec)
   {
     ROS_WARN("Reset time offset");
 
     // TODO: maybe use some fancy algorithm to calculate time
-    time_offset = now - in_time;
-    return now;
+    time_offset = ros_time - mav_time;
+    out_time = ros_time;
   }
 
-  return out;
+  // publish times for debugging purposes
+  if(enable_time_debug)
+  {
+    mavlink_phoenix::TIMES msg;
+    msg.diff_time = diff_time;
+    msg.mav_time = mav_time;
+    msg.ros_time = ros_time;
+    msg.header.stamp = ros_time;
+    debug_pub.publish(msg);
+  }
+
+  ROS_DEBUG_STREAM(" mav_sec: " << sec << " ros_sec: " << ros_time.sec << " diff_sec: " << diff_time.sec << " reset_off_sec: " << reset_offset_sec);
+
+  return out_time;
 }
 
 /**
@@ -695,7 +722,8 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   ros::NodeHandle pnh("~");
 
-  pnh.param<int>("reset_offset_sec", reset_offset_sec, 0);
+  pnh.param<double>("reset_offset_sec", reset_offset_sec, 1);
+  pnh.param<bool>("enable_time_debug", enable_time_debug, false);
 
   to_mav_mav_raw_data_publisher =     n.advertise<mavlink_phoenix::MAV_RAW_DATA>("/to_mav/mav_raw_data", 10);
   from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);
@@ -721,6 +749,11 @@ int main(int argc, char **argv) {
   from_mav_config_param_bool_pub =  n.advertise<mavlink_phoenix::CONFIG_PARAM_BOOL>("/from_mav/config_param_bool", 10);
   from_mav_config_param_float_pub = n.advertise<mavlink_phoenix::CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
   from_mav_command_pub =            n.advertise<mavlink_phoenix::COMMAND>("/from_mav/command", 10);
+
+  if(enable_time_debug)
+  {
+    debug_pub = n.advertise<mavlink_phoenix::TIMES>("/from_mav/times", 10);
+  }
 
   /**
    * Messages Subscribers Declaration

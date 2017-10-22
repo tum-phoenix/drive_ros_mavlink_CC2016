@@ -1,8 +1,11 @@
 <launch>
 
 <node name="mavlink" pkg="mavlink_phoenix" type="mavlink_phoenix_node" output="screen">
-    <!-- reset time offset between mavlink and ros after reaching this threashold [sec] -->
-    <param name="reset_offset_sec" type="int" value="0" />
+    <!-- reset time offset between mavlink and ros after reaching this difference [sec] -->
+    <param name="reset_offset_sec" type="double" value="10" />
+
+    <!-- enable / disable time debug output -->
+    <param name="enable_time_debug" type="bool" value="false" />
 </node>
 
 </launch>
