@@ -59,7 +59,7 @@ ros::Time convert_time(const uint32_t usec)
 {
   // convert usec to sec & nsec
   uint32_t sec  = static_cast<uint32_t>(static_cast<double>(usec)*pow(10, -6));
-  uint32_t nsec = static_cast<uint32_t>(static_cast<double>(usec-sec)*pow(10, 3));
+  uint32_t nsec = static_cast<uint32_t>(static_cast<double>(usec-sec*pow(10,6))*pow(10, 3));
 
   ros::Time mav_time(sec, nsec);
   ros::Time now_time = ros::Time::now();
