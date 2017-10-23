@@ -80,8 +80,8 @@ ros::Time convert_time(const uint32_t usec)
     diff_time = ros::Duration(0,0);
   }
 
-  // add communication offset
-  ros_time = ros_time + ros::Duration(comm_offset);
+  // substract communication offset
+  ros_time = ros_time - ros::Duration(comm_offset);
 
   // publish times for debugging purposes
   if(enable_time_debug)
