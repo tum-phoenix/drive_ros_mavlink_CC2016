@@ -1,11 +1,15 @@
 <launch>
 
 <node name="mavlink" pkg="mavlink_phoenix" type="mavlink_phoenix_node" output="screen">
+    <!-- constant communication time offset which is subtracted from overall time offset [sec]-->
+    <!-- TODO: calculate this value somehow -->
+    <param name="comm_offset" type="double" value="0.002" />
+
     <!-- reset time offset between mavlink and ros after reaching this difference [sec] -->
-    <param name="reset_offset_sec" type="double" value="0.05" />
+    <param name="reset_offset" type="double" value="0.05" />
 
     <!-- enable / disable time debug output -->
-    <param name="enable_time_debug" type="bool" value="false" />
+    <param name="enable_time_debug" type="bool" value="true" />
 </node>
 
 </launch>
