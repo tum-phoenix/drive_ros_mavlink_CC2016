@@ -1,6 +1,6 @@
 <launch>
 
-<node name="mavlink" pkg="mavlink_phoenix" type="mavlink_phoenix_node" output="screen">
+<node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="screen">
     <!-- constant communication time offset which is subtracted from overall time offset [sec]-->
     <!-- TODO: calculate this value somehow -->
     <param name="comm_offset" type="double" value="0.002" />

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-    <name>mavlink_phoenix</name>
+    <name>drive_ros_mavlink_cc2016</name>
     <version>0.1.9</version>
     <description>Mavlink generated messages for package mavlink_phoenix</description>
     <maintainer email="posilva@gmail.com">Pedro Marque da Silva</maintainer>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mavlink_phoenix)
+project(drive_ros_mavlink_cc2016)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
    FILES
-   MAV_RAW_DATA.msg
+        MAV_RAW_DATA.msg
         NOTIFICATION.msg
         HEARTBEAT.msg
         DEBUG.msg
@@ -51,13 +51,11 @@ catkin_package(
 )
 
 include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
 
-    add_executable(mavlink_phoenix_node src/mavlink_phoenix_node.cpp)
-    target_link_libraries(mavlink_phoenix_node ${catkin_LIBRARIES})
-    add_dependencies(mavlink_phoenix_node  mavlink_phoenix_generate_messages_cpp)
+add_executable(mavlink_phoenix_node src/mavlink_phoenix_node.cpp)
+target_link_libraries(mavlink_phoenix_node ${catkin_LIBRARIES})
+add_dependencies(mavlink_phoenix_node  ${PROJECT_NAME}_generate_messages_cpp)
 
 install(TARGETS mavlink_phoenix_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

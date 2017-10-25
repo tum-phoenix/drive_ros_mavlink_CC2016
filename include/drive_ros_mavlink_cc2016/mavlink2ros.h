@@ -1,0 +1,31 @@
+// Automatically Generated in 2017-06-12 22:33:47.453434
+#ifndef MAVLINK_PHOENIX_MAVLINK2ROS_H
+#define MAVLINK_PHOENIX_MAVLINK2ROS_H
+#include <drive_ros_mavlink_cc2016/NOTIFICATION.h>
+#include <drive_ros_mavlink_cc2016/HEARTBEAT.h>
+#include <drive_ros_mavlink_cc2016/DEBUG.h>
+#include <drive_ros_mavlink_cc2016/TELEMETRY.h>
+#include <drive_ros_mavlink_cc2016/CONTROL_LIGHTS.h>
+#include <drive_ros_mavlink_cc2016/CONTROL_COMMAND.h>
+#include <drive_ros_mavlink_cc2016/IMU.h>
+#include <drive_ros_mavlink_cc2016/ODOMETER_ABS.h>
+#include <drive_ros_mavlink_cc2016/ODOMETER_RAW.h>
+#include <drive_ros_mavlink_cc2016/ODOMETER_DELTA.h>
+#include <drive_ros_mavlink_cc2016/ODOMETER_DELTA_RAW.h>
+#include <drive_ros_mavlink_cc2016/ODOMETER.h>
+#include <drive_ros_mavlink_cc2016/PROXIMITY.h>
+#include <drive_ros_mavlink_cc2016/PARKING_LOT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_REQUEST_COUNT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_REQUEST.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_REQUEST_PARAMS.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_COUNT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_INT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_BOOL.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_FLOAT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_SET_INT.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_SET_BOOL.h>
+#include <drive_ros_mavlink_cc2016/CONFIG_PARAM_SET_FLOAT.h>
+#include <drive_ros_mavlink_cc2016/COMMAND.h>
+#include <drive_ros_mavlink_cc2016/MAV_RAW_DATA.h>
+#endif // MAVLINK_PHOENIX_MAVLINK2ROS_H
