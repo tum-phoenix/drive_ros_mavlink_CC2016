@@ -5,49 +5,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   geometry_msgs
-  message_generation
+  drive_ros_msgs
 )
 
-add_message_files(
-   FILES
-        MAV_RAW_DATA.msg
-        NOTIFICATION.msg
-        HEARTBEAT.msg
-        DEBUG.msg
-        TELEMETRY.msg
-        CONTROL_LIGHTS.msg
-        CONTROL_COMMAND.msg
-        IMU.msg
-        ODOMETER_ABS.msg
-        ODOMETER_RAW.msg
-        ODOMETER_DELTA.msg
-        ODOMETER_DELTA_RAW.msg
-        ODOMETER.msg
-        PROXIMITY.msg
-        PARKING_LOT.msg
-        CONFIG_REQUEST_COUNT.msg
-        CONFIG_REQUEST.msg
-        CONFIG_REQUEST_PARAMS.msg
-        CONFIG_COUNT.msg
-        CONFIG.msg
-        CONFIG_PARAM_INT.msg
-        CONFIG_PARAM_BOOL.msg
-        CONFIG_PARAM_FLOAT.msg
-        CONFIG_PARAM_SET_INT.msg
-        CONFIG_PARAM_SET_BOOL.msg
-        CONFIG_PARAM_SET_FLOAT.msg
-        COMMAND.msg
-        TIMES.msg
 
-)
-generate_messages(
-    DEPENDENCIES
-    geometry_msgs
-
-)
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp geometry_msgs message_runtime
+  CATKIN_DEPENDS roscpp geometry_msgs drive_ros_msgs
 )
 
 include_directories(include)
@@ -55,7 +19,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 add_executable(mavlink_phoenix_node src/mavlink_phoenix_node.cpp)
 target_link_libraries(mavlink_phoenix_node ${catkin_LIBRARIES})
-add_dependencies(mavlink_phoenix_node  ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(mavlink_phoenix_node  drive_ros_msgs_generate_messages_cpp)
 
 install(TARGETS mavlink_phoenix_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

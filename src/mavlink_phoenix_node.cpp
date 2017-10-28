@@ -5,7 +5,6 @@
 #include <drive_ros_mavlink_cc2016/mavlink2ros.h>
 #include <drive_ros_mavlink_cc2016/phoenix/mavlink.h>
 #include <geometry_msgs/Vector3.h>
-#include <drive_ros_mavlink_cc2016/TIMES.h>
 #include <ros/ros.h>
 #include <cstdlib>
 
@@ -89,7 +88,7 @@ ros::Time convert_time(const uint32_t usec)
   // publish times for debugging purposes
   if(enable_time_debug)
   {
-    drive_ros_mavlink_cc2016::TIMES msg;
+    drive_ros_msgs::mav_cc16_TIMES msg;
     msg.diff_time = diff_time;
     msg.mav_time = mav_time;
     msg.ros_time = ros_time;
@@ -107,9 +106,9 @@ ros::Time convert_time(const uint32_t usec)
  **/
 int write_to_mav(uint8_t *b, int sz) {
 
-  drive_ros_mavlink_cc2016::MAV_RAW_DATA m;
+  drive_ros_msgs::mav_RAW_DATA m;
 
-  m.channel = drive_ros_mavlink_cc2016::MAV_RAW_DATA::CH_COMM0;
+  m.channel = drive_ros_msgs::mav_RAW_DATA::CH_COMM0;
   m.data.assign(b, b + sz);
   int rc = m.data.size();
   to_mav_mav_raw_data_publisher.publish(m);
@@ -121,7 +120,7 @@ int write_to_mav(uint8_t *b, int sz) {
  *
  */
 void to_mav_control_lights_callback(
-    const drive_ros_mavlink_cc2016::CONTROL_LIGHTS::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONTROL_LIGHTS::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONTROL_LIGHTS request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -146,7 +145,7 @@ void to_mav_control_lights_callback(
  *
  */
 void to_mav_control_command_callback(
-    const drive_ros_mavlink_cc2016::CONTROL_COMMAND::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONTROL_COMMAND::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONTROL_COMMAND request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -174,7 +173,7 @@ void to_mav_control_command_callback(
  *
  */
 void to_mav_config_request_count_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_REQUEST_COUNT::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_REQUEST_COUNT::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_REQUEST_COUNT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -198,7 +197,7 @@ void to_mav_config_request_count_callback(
  *
  */
 void to_mav_config_request_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_REQUEST::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_REQUEST::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_REQUEST request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -222,7 +221,7 @@ void to_mav_config_request_callback(
  *
  */
 void to_mav_config_request_params_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_REQUEST_PARAMS::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_REQUEST_PARAMS::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_REQUEST_PARAMS request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -247,7 +246,7 @@ void to_mav_config_request_params_callback(
  *
  */
 void to_mav_config_param_set_int_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_PARAM_SET_INT::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_PARAM_SET_INT::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_PARAM_SET_INT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -273,7 +272,7 @@ void to_mav_config_param_set_int_callback(
  *
  */
 void to_mav_config_param_set_bool_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_PARAM_SET_BOOL::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_PARAM_SET_BOOL::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_PARAM_SET_BOOL request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -299,7 +298,7 @@ void to_mav_config_param_set_bool_callback(
  *
  */
 void to_mav_config_param_set_float_callback(
-    const drive_ros_mavlink_cc2016::CONFIG_PARAM_SET_FLOAT::ConstPtr &msg) {
+    const drive_ros_msgs::mav_cc16_CONFIG_PARAM_SET_FLOAT::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_CONFIG_PARAM_SET_FLOAT request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -324,7 +323,7 @@ void to_mav_config_param_set_float_callback(
 /**
  *
  */
-void to_mav_command_callback(const drive_ros_mavlink_cc2016::COMMAND::ConstPtr &msg) {
+void to_mav_command_callback(const drive_ros_msgs::mav_cc16_COMMAND::ConstPtr &msg) {
   ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a  'to_mav_COMMAND request");
 
   uint8_t data[MAVLINK_MAX_PACKET_LEN];
@@ -348,7 +347,7 @@ void to_mav_command_callback(const drive_ros_mavlink_cc2016::COMMAND::ConstPtr &
  *
  */
 void from_mav_mav_raw_data_callback(
-    const drive_ros_mavlink_cc2016::MAV_RAW_DATA::ConstPtr &msg) {
+    const drive_ros_msgs::mav_RAW_DATA::ConstPtr &msg) {
 
   for (int i = 0; i < msg->data.size(); ++i) {
     // Try to get a new message
@@ -357,7 +356,7 @@ void from_mav_mav_raw_data_callback(
       switch (mav_msg.msgid) {
 
       case MAVLINK_MSG_ID_NOTIFICATION: {
-        drive_ros_mavlink_cc2016::NOTIFICATION m;
+        drive_ros_msgs::mav_cc16_NOTIFICATION m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -377,7 +376,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'NOTIFICATION' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_HEARTBEAT: {
-        drive_ros_mavlink_cc2016::HEARTBEAT m;
+        drive_ros_msgs::mav_cc16_HEARTBEAT m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -399,7 +398,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'HEARTBEAT' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_DEBUG: {
-        drive_ros_mavlink_cc2016::DEBUG m;
+        drive_ros_msgs::mav_cc16_DEBUG m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -415,7 +414,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'DEBUG' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_TELEMETRY: {
-        drive_ros_mavlink_cc2016::TELEMETRY m;
+        drive_ros_msgs::mav_cc16_TELEMETRY m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -456,7 +455,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'TELEMETRY' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_IMU: {
-        drive_ros_mavlink_cc2016::IMU m;
+        drive_ros_msgs::mav_cc16_IMU m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -481,7 +480,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'IMU' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_ABS: {
-        drive_ros_mavlink_cc2016::ODOMETER_ABS m;
+        drive_ros_msgs::mav_cc16_ODOMETER_ABS m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -504,7 +503,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_ABS' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_RAW: {
-        drive_ros_mavlink_cc2016::ODOMETER_RAW m;
+        drive_ros_msgs::mav_cc16_ODOMETER_RAW m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -524,7 +523,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_RAW' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_DELTA: {
-        drive_ros_mavlink_cc2016::ODOMETER_DELTA m;
+        drive_ros_msgs::mav_cc16_ODOMETER_DELTA m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -548,7 +547,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_DELTA_RAW: {
-        drive_ros_mavlink_cc2016::ODOMETER_DELTA_RAW m;
+        drive_ros_msgs::mav_cc16_ODOMETER_DELTA_RAW m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -569,7 +568,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA_RAW' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER: {
-        drive_ros_mavlink_cc2016::ODOMETER m;
+        drive_ros_msgs::mav_cc16_ODOMETER m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -596,7 +595,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_PROXIMITY: {
-        drive_ros_mavlink_cc2016::PROXIMITY m;
+        drive_ros_msgs::mav_cc16_PROXIMITY m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -612,7 +611,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'PROXIMITY' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_PARKING_LOT: {
-        drive_ros_mavlink_cc2016::PARKING_LOT m;
+        drive_ros_msgs::mav_cc16_PARKING_LOT m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -630,7 +629,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'PARKING_LOT' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_CONFIG_COUNT: {
-        drive_ros_mavlink_cc2016::CONFIG_COUNT m;
+        drive_ros_msgs::mav_cc16_CONFIG_COUNT m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -645,7 +644,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'CONFIG_COUNT' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_CONFIG: {
-        drive_ros_mavlink_cc2016::CONFIG m;
+        drive_ros_msgs::mav_cc16_CONFIG m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -662,7 +661,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'CONFIG' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_CONFIG_PARAM_INT: {
-        drive_ros_mavlink_cc2016::CONFIG_PARAM_INT m;
+        drive_ros_msgs::mav_cc16_CONFIG_PARAM_INT m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -683,7 +682,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'CONFIG_PARAM_INT' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_CONFIG_PARAM_BOOL: {
-        drive_ros_mavlink_cc2016::CONFIG_PARAM_BOOL m;
+        drive_ros_msgs::mav_cc16_CONFIG_PARAM_BOOL m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -702,7 +701,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'CONFIG_PARAM_BOOL' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_CONFIG_PARAM_FLOAT: {
-        drive_ros_mavlink_cc2016::CONFIG_PARAM_FLOAT m;
+        drive_ros_msgs::mav_cc16_CONFIG_PARAM_FLOAT m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -723,7 +722,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'CONFIG_PARAM_FLOAT' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_COMMAND: {
-        drive_ros_mavlink_cc2016::COMMAND m;
+        drive_ros_msgs::mav_cc16_COMMAND m;
 
         m.sysid = mav_msg.sysid;
         m.compid = mav_msg.compid;
@@ -758,34 +757,34 @@ int main(int argc, char **argv) {
   ROS_INFO_STREAM("set 'comm_off' to: " << comm_offset);
   ROS_INFO_STREAM("set 'enable_time_debug' to: " << enable_time_debug);
 
-  to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_mavlink_cc2016::MAV_RAW_DATA>("/to_mav/mav_raw_data", 10);
+  to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_msgs::mav_RAW_DATA>("/to_mav/mav_raw_data", 10);
   from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);
 
   /**
    * Messages Publishers Initialization
    */
-  from_mav_notification_pub =       n.advertise<drive_ros_mavlink_cc2016::NOTIFICATION>("/from_mav/notification", 10);
-  from_mav_heartbeat_pub =          n.advertise<drive_ros_mavlink_cc2016::HEARTBEAT>("/from_mav/heartbeat", 10);
-  from_mav_debug_pub =              n.advertise<drive_ros_mavlink_cc2016::DEBUG>("/from_mav/debug", 10);
-  from_mav_telemetry_pub =          n.advertise<drive_ros_mavlink_cc2016::TELEMETRY>("/from_mav/telemetry", 10);
-  from_mav_imu_pub =                n.advertise<drive_ros_mavlink_cc2016::IMU>("/from_mav/imu", 10);
-  from_mav_odometer_abs_pub =       n.advertise<drive_ros_mavlink_cc2016::ODOMETER_ABS>("/from_mav/odometer_abs", 10);
-  from_mav_odometer_raw_pub =       n.advertise<drive_ros_mavlink_cc2016::ODOMETER_RAW>("/from_mav/odometer_raw", 10);
-  from_mav_odometer_delta_pub =     n.advertise<drive_ros_mavlink_cc2016::ODOMETER_DELTA>("/from_mav/odometer_delta", 10);
-  from_mav_odometer_delta_raw_pub = n.advertise<drive_ros_mavlink_cc2016::ODOMETER_DELTA_RAW>("/from_mav/odometer_delta_raw", 10);
-  from_mav_odometer_pub =           n.advertise<drive_ros_mavlink_cc2016::ODOMETER>("/from_mav/odometer", 10);
-  from_mav_proximity_pub =          n.advertise<drive_ros_mavlink_cc2016::PROXIMITY>("/from_mav/proximity", 10);
-  from_mav_parking_lot_pub =        n.advertise<drive_ros_mavlink_cc2016::PARKING_LOT>("/from_mav/parking_lot", 10);
-  from_mav_config_count_pub =       n.advertise<drive_ros_mavlink_cc2016::CONFIG_COUNT>("/from_mav/config_count", 10);
-  from_mav_config_pub =             n.advertise<drive_ros_mavlink_cc2016::CONFIG>("/from_mav/config", 10);
-  from_mav_config_param_int_pub =   n.advertise<drive_ros_mavlink_cc2016::CONFIG_PARAM_INT>("/from_mav/config_param_int", 10);
-  from_mav_config_param_bool_pub =  n.advertise<drive_ros_mavlink_cc2016::CONFIG_PARAM_BOOL>("/from_mav/config_param_bool", 10);
-  from_mav_config_param_float_pub = n.advertise<drive_ros_mavlink_cc2016::CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
-  from_mav_command_pub =            n.advertise<drive_ros_mavlink_cc2016::COMMAND>("/from_mav/command", 10);
+  from_mav_notification_pub =       n.advertise<drive_ros_msgs::mav_cc16_NOTIFICATION>("/from_mav/notification", 10);
+  from_mav_heartbeat_pub =          n.advertise<drive_ros_msgs::mav_cc16_HEARTBEAT>("/from_mav/heartbeat", 10);
+  from_mav_debug_pub =              n.advertise<drive_ros_msgs::mav_cc16_DEBUG>("/from_mav/debug", 10);
+  from_mav_telemetry_pub =          n.advertise<drive_ros_msgs::mav_cc16_TELEMETRY>("/from_mav/telemetry", 10);
+  from_mav_imu_pub =                n.advertise<drive_ros_msgs::mav_cc16_IMU>("/from_mav/imu", 10);
+  from_mav_odometer_abs_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_ABS>("/from_mav/odometer_abs", 10);
+  from_mav_odometer_raw_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_RAW>("/from_mav/odometer_raw", 10);
+  from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_DELTA>("/from_mav/odometer_delta", 10);
+  from_mav_odometer_delta_raw_pub = n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_DELTA_RAW>("/from_mav/odometer_delta_raw", 10);
+  from_mav_odometer_pub =           n.advertise<drive_ros_msgs::mav_cc16_ODOMETER>("/from_mav/odometer", 10);
+  from_mav_proximity_pub =          n.advertise<drive_ros_msgs::mav_cc16_PROXIMITY>("/from_mav/proximity", 10);
+  from_mav_parking_lot_pub =        n.advertise<drive_ros_msgs::mav_cc16_PARKING_LOT>("/from_mav/parking_lot", 10);
+  from_mav_config_count_pub =       n.advertise<drive_ros_msgs::mav_cc16_CONFIG_COUNT>("/from_mav/config_count", 10);
+  from_mav_config_pub =             n.advertise<drive_ros_msgs::mav_cc16_CONFIG>("/from_mav/config", 10);
+  from_mav_config_param_int_pub =   n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_INT>("/from_mav/config_param_int", 10);
+  from_mav_config_param_bool_pub =  n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_BOOL>("/from_mav/config_param_bool", 10);
+  from_mav_config_param_float_pub = n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
+  from_mav_command_pub =            n.advertise<drive_ros_msgs::mav_cc16_COMMAND>("/from_mav/command", 10);
 
   if(enable_time_debug)
   {
-    debug_pub = n.advertise<drive_ros_mavlink_cc2016::TIMES>("/from_mav/times", 10);
+    debug_pub = n.advertise<drive_ros_msgs::mav_cc16_TIMES>("/from_mav/times", 10);
   }
 
   /**

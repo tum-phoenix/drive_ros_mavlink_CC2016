@@ -9,7 +9,7 @@
     <param name="reset_offset" type="double" value="0.05" />
 
     <!-- enable / disable time debug output -->
-    <param name="enable_time_debug" type="bool" value="false" />
+    <param name="enable_time_debug" type="bool" value="true" />
 </node>
 
 </launch>
