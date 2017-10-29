@@ -42,18 +42,6 @@ static double comm_offset;
 static bool enable_time_debug;
 
 
-double convert_RosTime_2_Double(const ros::Time in)
-{
-  return (double)in.sec + (double)in.nsec * pow(10, -9);
-}
-
-
-double convert_RosDuration_2_Double(const ros::Duration in)
-{
-  return (double)in.sec + (double)in.nsec * pow(10, -9);
-}
-
-
 /**
  *  Converts mavlink time into ROS time
  **/
@@ -69,14 +57,13 @@ ros::Time convert_time(const uint32_t usec)
 
   // calculate difference
   ros::Duration diff_time = now_time - ros_time;
-  double diff_double = convert_RosDuration_2_Double(diff_time);
 
   // check if difference is ok or reset if not
-  if(fabs(static_cast<float>(diff_double)) > reset_offset)  // somehow clang doesnt like fabs() using double -> convert to float
+  if(fabs(diff_time.toSec()) > reset_offset)
   {
     ROS_WARN("Reset time offset");
 
-    // TODO: maybe use some fancy algorithm to calculate time
+    // TODO: maybe use some fancy interpolation algorithm to calculate time
     time_offset = now_time - mav_time ;
     ros_time = now_time;
     diff_time = ros::Duration(0,0);
@@ -96,7 +83,7 @@ ros::Time convert_time(const uint32_t usec)
     debug_pub.publish(msg);
   }
 
-  ROS_DEBUG_STREAM("mav_in[usec]:" << usec << "  time_offset[sec]:" << time_offset.sec << "  diff_double[sec]:" << diff_double );
+  ROS_DEBUG_STREAM("mav_in[usec]:" << usec << "  time_offset[sec]:" << time_offset.sec << "  diff_double[sec]:" << diff_time.toSec() );
 
   return ros_time;
 }
