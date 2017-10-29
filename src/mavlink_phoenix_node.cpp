@@ -7,6 +7,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
 #include <cstdlib>
+#include "drive_ros_msgs/TimeCompare.h"
 
 mavlink_message_t mav_msg; //! Global mavlink message
 mavlink_status_t status;   //! Global mavlink status
@@ -75,10 +76,10 @@ ros::Time convert_time(const uint32_t usec)
   // publish times for debugging purposes
   if(enable_time_debug)
   {
-    drive_ros_msgs::mav_cc16_TIMES msg;
+    drive_ros_msgs::TimeCompare msg;
     msg.diff_time = diff_time;
-    msg.mav_time = mav_time;
-    msg.ros_time = ros_time;
+    msg.time_1 = mav_time;
+    msg.time_2 = ros_time;
     msg.header.stamp = now_time;
     debug_pub.publish(msg);
   }
@@ -771,7 +772,7 @@ int main(int argc, char **argv) {
 
   if(enable_time_debug)
   {
-    debug_pub = n.advertise<drive_ros_msgs::mav_cc16_TIMES>("/from_mav/times", 10);
+    debug_pub = n.advertise<drive_ros_msgs::TimeCompare>("/from_mav/debug_times", 10);
   }
 
   /**

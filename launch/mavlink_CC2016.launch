@@ -3,7 +3,7 @@
 <node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="screen">
     <!-- constant communication time offset which is subtracted from overall time offset [sec]-->
     <!-- TODO: calculate this value somehow -->
-    <param name="comm_offset" type="double" value="0.002" />
+    <param name="comm_offset" type="double" value="0" />
 
     <!-- reset time offset between mavlink and ros after reaching this difference [sec] -->
     <param name="reset_offset" type="double" value="0.05" />

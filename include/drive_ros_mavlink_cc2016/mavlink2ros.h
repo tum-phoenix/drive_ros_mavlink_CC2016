@@ -28,5 +28,4 @@
 #include <drive_ros_msgs/mav_cc16_CONFIG_PARAM_SET_FLOAT.h>
 #include <drive_ros_msgs/mav_cc16_COMMAND.h>
 #include <drive_ros_msgs/mav_RAW_DATA.h>
-#include <drive_ros_msgs/mav_cc16_TIMES.h>
 #endif // MAVLINK_PHOENIX_MAVLINK2ROS_H
