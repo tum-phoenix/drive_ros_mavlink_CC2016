@@ -1,15 +1,19 @@
 <launch>
 
 <node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="screen">
-    <!-- constant communication time offset which is subtracted from overall time offset [sec]-->
+    <!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
     <!-- TODO: calculate this value somehow -->
-    <param name="comm_offset" type="double" value="0" />
+    <param name="comm_offset" type="int" value="0" />
 
-    <!-- reset time offset between mavlink and ros after reaching this difference [sec] -->
-    <param name="reset_offset" type="double" value="0.05" />
+    <!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->
+    <param name="reset_offset" type="int" value="10000" />
+
+    <!-- ignore time steps smaller than this and use the same time instead (easier to fuse messages later on) [microsec] -->
+    <param name="ignore_times" type="int" value="500" />
 
     <!-- enable / disable time debug output -->
     <param name="enable_time_debug" type="bool" value="false" />
+
 </node>
 
 </launch>

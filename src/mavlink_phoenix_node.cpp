@@ -7,6 +7,8 @@
 #include <geometry_msgs/Vector3.h>
 #include <ros/ros.h>
 #include <cstdlib>
+#include <chrono>
+#include <ratio>
 #include "drive_ros_msgs/TimeCompare.h"
 
 mavlink_message_t mav_msg; //! Global mavlink message
@@ -37,22 +39,57 @@ ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
 ros::Publisher debug_pub;
 
-static ros::Duration time_offset;
-static double reset_offset;
-static double comm_offset;
+typedef std::chrono::seconds        sec_t;
+typedef std::chrono::microseconds  usec_t;
+typedef std::chrono::nanoseconds   nsec_t;
+
+// parameter
+static usec_t* reset_offset_us;
+static usec_t* comm_offset_us;
+static usec_t* ignore_times_us;
 static bool enable_time_debug;
 
+// local variables
+static ros::Duration time_offset;
+static usec_t last_time;
+
+
+/**
+ *  Converts microseconds to ROS-Time
+ **/
+ros::Time convert2RosTime(usec_t in)
+{
+  sec_t  sec = std::chrono::duration_cast<sec_t>(in);
+  nsec_t nsec = std::chrono::duration_cast<nsec_t>(in) - std::chrono::duration_cast<nsec_t>(sec);
+  return ros::Time(sec.count(), nsec.count());
+}
+
+
+/**
+ *  Converts microseconds to ROS-Duration
+ **/
+ros::Duration convert2RosDuration(usec_t in)
+{
+  return convert2RosTime(in) - ros::Time(0,0);
+}
 
 /**
  *  Converts mavlink time into ROS time
  **/
 ros::Time convert_time(const uint32_t usec)
 {
-  // convert usec to sec & nsec
-  uint32_t sec  = static_cast<uint32_t>(static_cast<double>(usec)*pow(10, -6));
-  uint32_t nsec = static_cast<uint32_t>(static_cast<double>(usec-sec*pow(10,6))*pow(10, 3));
+  // check if we have enough difference or not
+  usec_t mav_usec(usec);
+  if(ignore_times_us->count() > abs((mav_usec - last_time).count()))
+  {
+    mav_usec = last_time;
+    ROS_DEBUG("Use old time");
+  }else{
+     last_time = mav_usec;
+     ROS_DEBUG("Use new time");
+  }
 
-  ros::Time mav_time(sec, nsec);
+  ros::Time mav_time = convert2RosTime(mav_usec);
   ros::Time now_time = ros::Time::now();
   ros::Time ros_time = mav_time + time_offset;
 
@@ -60,7 +97,7 @@ ros::Time convert_time(const uint32_t usec)
   ros::Duration diff_time = now_time - ros_time;
 
   // check if difference is ok or reset if not
-  if(fabs(diff_time.toSec()) > reset_offset)
+  if(abs(diff_time.toNSec()) > std::chrono::duration_cast<nsec_t>(*reset_offset_us).count())
   {
     ROS_WARN("Reset time offset");
 
@@ -71,7 +108,7 @@ ros::Time convert_time(const uint32_t usec)
   }
 
   // substract communication offset
-  ros_time = ros_time - ros::Duration(comm_offset);
+  ros_time = ros_time - convert2RosDuration(*comm_offset_us);
 
   // publish times for debugging purposes
   if(enable_time_debug)
@@ -84,7 +121,7 @@ ros::Time convert_time(const uint32_t usec)
     debug_pub.publish(msg);
   }
 
-  ROS_DEBUG_STREAM("mav_in[usec]:" << usec << "  time_offset[sec]:" << time_offset.sec << "  diff_double[sec]:" << diff_time.toSec() );
+  ROS_DEBUG_STREAM("mav_in[usec]:" << usec << " ros_time[nsec]:" << ros_time.toNSec() << "  time_offset[sec]:" << time_offset.sec << "  diff_double[sec]:" << diff_time.toSec() );
 
   return ros_time;
 }
@@ -737,12 +774,22 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   ros::NodeHandle pnh("~");
 
-  pnh.param<double>("reset_offset", reset_offset, 0.1);
-  pnh.param<double>("comm_offset", comm_offset, 0);
+  {
+    int reset_offset_us_int, comm_offset_us_int, ignore_times_us_int;
+    pnh.param<int>("reset_offset", reset_offset_us_int, 5000);
+    pnh.param<int>("comm_offset", comm_offset_us_int, 0);
+    pnh.param<int>("ignore_times", ignore_times_us_int, 0);
+
+    reset_offset_us = new usec_t(reset_offset_us_int);
+    comm_offset_us = new usec_t(comm_offset_us_int);
+    ignore_times_us = new usec_t(ignore_times_us_int);
+  }
   pnh.param<bool>("enable_time_debug", enable_time_debug, false);
 
-  ROS_INFO_STREAM("set 'reset_off_sec' to: " << reset_offset);
-  ROS_INFO_STREAM("set 'comm_off' to: " << comm_offset);
+
+
+  ROS_INFO_STREAM("set 'reset_offset' to: " << reset_offset_us->count());
+  ROS_INFO_STREAM("set 'comm_offset' to: " << comm_offset_us->count());
   ROS_INFO_STREAM("set 'enable_time_debug' to: " << enable_time_debug);
 
   to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_msgs::mav_RAW_DATA>("/to_mav/mav_raw_data", 10);
