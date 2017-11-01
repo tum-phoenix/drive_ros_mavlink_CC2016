@@ -1,6 +1,11 @@
 <launch>
 
-<node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="screen">
+<!-- define nice value of process (lower means higher priority) [-20;19] -->
+<!-- more infos: https://en.wikipedia.org/wiki/Nice_(Unix) -->
+<arg name="nice_val" default="-5"/>
+
+
+<node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="screen" launch-prefix="nice -n $(arg nice_val)">
     <!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
     <!-- TODO: calculate this value somehow -->
     <param name="comm_offset" type="int" value="0" />
