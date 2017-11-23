@@ -22,6 +22,9 @@
     <!-- enable / disable time debug output -->
     <param name="enable_time_debug" type="bool" value="false" />
 
+    <!-- enable / disable imu debugging to file -->
+    <param name="enable_imu_debug" type="bool" value="false" />
+
 </node>
 
 </launch>

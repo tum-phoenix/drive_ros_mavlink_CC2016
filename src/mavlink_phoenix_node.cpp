@@ -11,6 +11,9 @@
 #include <ratio>
 #include "drive_ros_msgs/TimeCompare.h"
 
+
+#include <fstream>
+
 mavlink_message_t mav_msg; //! Global mavlink message
 mavlink_status_t status;   //! Global mavlink status
 
@@ -48,11 +51,13 @@ static usec_t* reset_offset_us;
 static usec_t* comm_offset_us;
 static usec_t* ignore_times_us;
 static bool enable_time_debug;
+static bool enable_imu_debug;
 
 // local variables
 static ros::Duration time_offset;
 static usec_t last_time;
 
+static std::ofstream file_log;
 
 /**
  *  Converts microseconds to ROS-Time
@@ -501,6 +506,19 @@ void from_mav_mav_raw_data_callback(
         m.mag.y = imu_in.ymag;
         m.mag.z = imu_in.zmag;
 
+        if(enable_imu_debug)
+        {
+          file_log << imu_in.xacc  << ",";
+          file_log << imu_in.yacc  << ",";
+          file_log << imu_in.zacc  << ",";
+          file_log << imu_in.xgyro << ",";
+          file_log << imu_in.ygyro << ",";
+          file_log << imu_in.zgyro << ",";
+          file_log << imu_in.xmag  << ",";
+          file_log << imu_in.ymag  << ",";
+          file_log << imu_in.zmag  << std::endl;
+        }
+
         from_mav_imu_pub.publish(m);
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'IMU' from mavlink.");
       } break;
@@ -785,7 +803,23 @@ int main(int argc, char **argv) {
     ignore_times_us = new usec_t(ignore_times_us_int);
   }
   pnh.param<bool>("enable_time_debug", enable_time_debug, false);
+  pnh.param<bool>("enable_imu_debug", enable_imu_debug, false);
 
+
+  if(enable_imu_debug)
+  {
+    file_log.open("/tmp/out_imu.csv");
+
+    file_log << "xacc"  << ",";
+    file_log << "yacc"  << ",";
+    file_log << "zacc"  << ",";
+    file_log << "xgyro" << ",";
+    file_log << "ygyro" << ",";
+    file_log << "zgyro" << ",";
+    file_log << "xmag"  << ",";
+    file_log << "ymag"  << ",";
+    file_log << "zmag"  << std::endl;
+  }
 
 
   ROS_INFO_STREAM("set 'reset_offset' to: " << reset_offset_us->count());
