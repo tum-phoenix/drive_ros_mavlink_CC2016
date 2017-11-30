@@ -4,15 +4,10 @@
  **/
 #include <drive_ros_mavlink_cc2016/mavlink2ros.h>
 #include <drive_ros_mavlink_cc2016/phoenix/mavlink.h>
+#include <drive_ros_mavlink_cc2016/time_conv.h>
 #include <geometry_msgs/Vector3.h>
-#include <ros/ros.h>
-#include <cstdlib>
-#include <chrono>
-#include <ratio>
-#include "drive_ros_msgs/TimeCompare.h"
-
-
 #include <fstream>
+#include <ros/ros.h>
 
 mavlink_message_t mav_msg; //! Global mavlink message
 mavlink_status_t status;   //! Global mavlink status
@@ -40,96 +35,17 @@ ros::Publisher from_mav_config_param_int_pub;
 ros::Publisher from_mav_config_param_bool_pub;
 ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
-ros::Publisher debug_pub;
 
-typedef std::chrono::seconds        sec_t;
-typedef std::chrono::microseconds  usec_t;
-typedef std::chrono::nanoseconds   nsec_t;
+
+
 
 // parameter
-static usec_t* reset_offset_us;
-static usec_t* comm_offset_us;
-static usec_t* ignore_times_us;
-static bool enable_time_debug;
 static bool enable_imu_debug;
-
-// local variables
-static ros::Duration time_offset;
-static usec_t last_time;
-
 static std::ofstream file_log;
 
-/**
- *  Converts microseconds to ROS-Time
- **/
-ros::Time convert2RosTime(usec_t in)
-{
-  sec_t  sec = std::chrono::duration_cast<sec_t>(in);
-  nsec_t nsec = std::chrono::duration_cast<nsec_t>(in) - std::chrono::duration_cast<nsec_t>(sec);
-  return ros::Time(sec.count(), nsec.count());
-}
+// time converter class
+static TimeConverter* time_conv;
 
-
-/**
- *  Converts microseconds to ROS-Duration
- **/
-ros::Duration convert2RosDuration(usec_t in)
-{
-  return convert2RosTime(in) - ros::Time(0,0);
-}
-
-/**
- *  Converts mavlink time into ROS time
- **/
-ros::Time convert_time(const uint32_t usec)
-{
-  // check if we have enough difference or not
-  usec_t mav_usec(usec);
-  if(ignore_times_us->count() > abs((mav_usec - last_time).count()))
-  {
-    mav_usec = last_time;
-    ROS_DEBUG("Use old time");
-  }else{
-     last_time = mav_usec;
-     ROS_DEBUG("Use new time");
-  }
-
-  ros::Time mav_time = convert2RosTime(mav_usec);
-  ros::Time now_time = ros::Time::now();
-  ros::Time ros_time = mav_time + time_offset;
-
-  // calculate difference
-  ros::Duration diff_time = now_time - ros_time;
-
-  // check if difference is ok or reset if not
-  if(abs(diff_time.toNSec()) > std::chrono::duration_cast<nsec_t>(*reset_offset_us).count())
-  {
-    ROS_WARN("Reset time offset");
-
-    // TODO: maybe use some fancy interpolation algorithm to calculate time
-    time_offset = now_time - mav_time ;
-    ros_time = now_time;
-    diff_time = ros::Duration(0,0);
-  }
-
-  // substract communication offset
-  ros_time = ros_time - convert2RosDuration(*comm_offset_us);
-
-  // publish times for debugging purposes
-  if(enable_time_debug)
-  {
-    drive_ros_msgs::TimeCompare msg;
-    msg.diff_time = diff_time;
-    msg.time_1 = mav_time;
-    msg.time_2 = ros_time;
-    msg.header.stamp = now_time;
-    debug_pub.publish(msg);
-  }
-
-  ROS_DEBUG_STREAM("mav_in[usec]:" << usec << " ros_time[nsec]:" << ros_time.toNSec() << "  time_offset[sec]:" << time_offset.sec << "  diff_double[sec]:" << diff_time.toSec() );
-
-  return ros_time;
-}
 
 /**
  *
@@ -395,7 +311,7 @@ void from_mav_mav_raw_data_callback(
         memset(&notification_in, 0, sizeof(notification_in));
         mavlink_msg_notification_decode(&mav_msg, &notification_in);
 
-        m.header.stamp = convert_time(notification_in.timestamp);
+        m.header.stamp = time_conv->convert_time(notification_in.timestamp);
         m.type = notification_in.type;
         memcpy(&(m.description), &(notification_in.description),
                sizeof(char) * 50);
@@ -415,7 +331,7 @@ void from_mav_mav_raw_data_callback(
         memset(&heartbeat_in, 0, sizeof(heartbeat_in));
         mavlink_msg_heartbeat_decode(&mav_msg, &heartbeat_in);
 
-        m.header.stamp = convert_time(heartbeat_in.timestamp);
+        m.header.stamp = time_conv->convert_time(heartbeat_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.battery_voltage = heartbeat_in.battery_voltage;
         m.remote_control = heartbeat_in.remote_control;
@@ -437,7 +353,7 @@ void from_mav_mav_raw_data_callback(
         memset(&debug_in, 0, sizeof(debug_in));
         mavlink_msg_debug_decode(&mav_msg, &debug_in);
 
-        m.header.stamp = convert_time(debug_in.timestamp);
+        m.header.stamp = time_conv->convert_time(debug_in.timestamp);
         memcpy(&(m.data), &(debug_in.data), sizeof(float) * 12);
 
         from_mav_debug_pub.publish(m);
@@ -453,7 +369,7 @@ void from_mav_mav_raw_data_callback(
         memset(&telemetry_in, 0, sizeof(telemetry_in));
         mavlink_msg_telemetry_decode(&mav_msg, &telemetry_in);
 
-        m.header.stamp = convert_time(telemetry_in.timestamp);
+        m.header.stamp = time_conv->convert_time(telemetry_in.timestamp);
         m.xacc = telemetry_in.xacc;
         m.yacc = telemetry_in.yacc;
         m.zacc = telemetry_in.zacc;
@@ -494,7 +410,7 @@ void from_mav_mav_raw_data_callback(
         memset(&imu_in, 0, sizeof(imu_in));
         mavlink_msg_imu_decode(&mav_msg, &imu_in);
 
-        m.header.stamp = convert_time(imu_in.timestamp);
+        m.header.stamp = time_conv->convert_time(imu_in.timestamp);
         m.header.frame_id = "imu";
         m.acc.x = imu_in.xacc;
         m.acc.y = imu_in.yacc;
@@ -532,7 +448,7 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_abs_in, 0, sizeof(odometer_abs_in));
         mavlink_msg_odometer_abs_decode(&mav_msg, &odometer_abs_in);
 
-        m.header.stamp = convert_time(odometer_abs_in.timestamp);
+        m.header.stamp = time_conv->convert_time(odometer_abs_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.dist.x = odometer_abs_in.xdist;
         m.dist.y = odometer_abs_in.ydist;
@@ -555,7 +471,7 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_raw_in, 0, sizeof(odometer_raw_in));
         mavlink_msg_odometer_raw_decode(&mav_msg, &odometer_raw_in);
 
-        m.header.stamp = convert_time(odometer_raw_in.timestamp);
+        m.header.stamp = time_conv->convert_time(odometer_raw_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.dist.x = odometer_raw_in.xdist;
         m.dist.y = odometer_raw_in.ydist;
@@ -575,7 +491,7 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_delta_in, 0, sizeof(odometer_delta_in));
         mavlink_msg_odometer_delta_decode(&mav_msg, &odometer_delta_in);
 
-        m.header.stamp = convert_time(odometer_delta_in.timestamp);
+        m.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.delta = odometer_delta_in.delta;
         m.dist.x = odometer_delta_in.xdist;
@@ -599,7 +515,7 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_delta_raw_in, 0, sizeof(odometer_delta_raw_in));
         mavlink_msg_odometer_delta_raw_decode(&mav_msg, &odometer_delta_raw_in);
 
-        m.header.stamp = convert_time(odometer_delta_raw_in.timestamp);
+        m.header.stamp = time_conv->convert_time(odometer_delta_raw_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.delta = odometer_delta_raw_in.delta;
         m.dist.x = odometer_delta_raw_in.xdist;
@@ -620,7 +536,7 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_in, 0, sizeof(odometer_in));
         mavlink_msg_odometer_decode(&mav_msg, &odometer_in);
 
-        m.header.stamp = convert_time(odometer_in.timestamp);
+        m.header.stamp = time_conv->convert_time(odometer_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
         m.time_delta = odometer_in.time_delta;
         m.dist_delta.x = odometer_in.xdist_delta;
@@ -647,7 +563,7 @@ void from_mav_mav_raw_data_callback(
         memset(&proximity_in, 0, sizeof(proximity_in));
         mavlink_msg_proximity_decode(&mav_msg, &proximity_in);
 
-        m.header.stamp = convert_time(proximity_in.timestamp);
+        m.header.stamp = time_conv->convert_time(proximity_in.timestamp);
         m.distance = proximity_in.distance;
 
         from_mav_proximity_pub.publish(m);
@@ -663,7 +579,7 @@ void from_mav_mav_raw_data_callback(
         memset(&parking_lot_in, 0, sizeof(parking_lot_in));
         mavlink_msg_parking_lot_decode(&mav_msg, &parking_lot_in);
 
-        m.header.stamp = convert_time(parking_lot_in.timestamp);
+        m.header.stamp = time_conv->convert_time(parking_lot_in.timestamp);
         m.header.frame_id = "side_lightswitch";
         m.parking_lot_size = parking_lot_in.parking_lot_size;
         m.parking_lot_position = parking_lot_in.parking_lot_position;
@@ -792,39 +708,58 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   ros::NodeHandle pnh("~");
 
+  // debug publisher
+  ros::Publisher debug_pub;
+
+  // time conversion parameters
   {
     int reset_offset_us_int, comm_offset_us_int, ignore_times_us_int;
     pnh.param<int>("reset_offset", reset_offset_us_int, 5000);
     pnh.param<int>("comm_offset", comm_offset_us_int, 0);
     pnh.param<int>("ignore_times", ignore_times_us_int, 0);
 
-    reset_offset_us = new usec_t(reset_offset_us_int);
-    comm_offset_us = new usec_t(comm_offset_us_int);
-    ignore_times_us = new usec_t(ignore_times_us_int);
+    bool enable_time_debug_bool;
+    pnh.param<bool>("enable_time_debug", enable_time_debug_bool, false);
+
+    ROS_INFO_STREAM("set 'reset_offset' to: " << reset_offset_us_int);
+    ROS_INFO_STREAM("set 'comm_offset' to: " << comm_offset_us_int);
+    ROS_INFO_STREAM("set 'enable_time_debug' to: " << enable_time_debug_bool);
+
+    if(enable_time_debug_bool)
+    {
+      debug_pub = n.advertise<drive_ros_msgs::TimeCompare>("/from_mav/debug_times", 10);
+    }
+
+    time_conv = new TimeConverter(static_cast<TimeConverter::usec_t>(reset_offset_us_int),
+                                  static_cast<TimeConverter::usec_t>(comm_offset_us_int),
+                                  static_cast<TimeConverter::usec_t>(ignore_times_us_int),
+                                  enable_time_debug_bool,
+                                  &debug_pub);
   }
-  pnh.param<bool>("enable_time_debug", enable_time_debug, false);
-  pnh.param<bool>("enable_imu_debug", enable_imu_debug, false);
 
 
-  if(enable_imu_debug)
+  // imu debug
   {
-    file_log.open("/tmp/out_imu.csv");
+    pnh.param<bool>("enable_imu_debug", enable_imu_debug, false);
 
-    file_log << "xacc"  << ",";
-    file_log << "yacc"  << ",";
-    file_log << "zacc"  << ",";
-    file_log << "xgyro" << ",";
-    file_log << "ygyro" << ",";
-    file_log << "zgyro" << ",";
-    file_log << "xmag"  << ",";
-    file_log << "ymag"  << ",";
-    file_log << "zmag"  << std::endl;
+    if(enable_imu_debug)
+    {
+      file_log.open("/tmp/out_imu.csv");
+
+      file_log << "xacc"  << ",";
+      file_log << "yacc"  << ",";
+      file_log << "zacc"  << ",";
+      file_log << "xgyro" << ",";
+      file_log << "ygyro" << ",";
+      file_log << "zgyro" << ",";
+      file_log << "xmag"  << ",";
+      file_log << "ymag"  << ",";
+      file_log << "zmag"  << std::endl;
+    }
   }
 
 
-  ROS_INFO_STREAM("set 'reset_offset' to: " << reset_offset_us->count());
-  ROS_INFO_STREAM("set 'comm_offset' to: " << comm_offset_us->count());
-  ROS_INFO_STREAM("set 'enable_time_debug' to: " << enable_time_debug);
+
 
   to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_msgs::mav_RAW_DATA>("/to_mav/mav_raw_data", 10);
   from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);
@@ -851,10 +786,6 @@ int main(int argc, char **argv) {
   from_mav_config_param_float_pub = n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
   from_mav_command_pub =            n.advertise<drive_ros_msgs::mav_cc16_COMMAND>("/from_mav/command", 10);
 
-  if(enable_time_debug)
-  {
-    debug_pub = n.advertise<drive_ros_msgs::TimeCompare>("/from_mav/debug_times", 10);
-  }
 
   /**
    * Messages Subscribers Declaration

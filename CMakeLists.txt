@@ -19,7 +19,9 @@ catkin_package(
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_executable(mavlink_phoenix_node src/mavlink_phoenix_node.cpp)
+add_executable(mavlink_phoenix_node
+    src/mavlink_phoenix_node.cpp
+    src/time_conv.cpp)
 target_link_libraries(mavlink_phoenix_node ${catkin_LIBRARIES})
 add_dependencies(mavlink_phoenix_node  drive_ros_msgs_generate_messages_cpp)
 
