@@ -41,22 +41,38 @@ ros::Duration TimeConverter::convert2RosDuration(usec_t in) const
 
 
 /**
+ *  this function ignores small time diffs
+ **/
+TimeConverter::usec_t TimeConverter::ignoreSmallTimeDiffs(const usec_t in)
+{
+  usec_t out;
+
+  // check if we have enough difference
+  if(ignore_times_us.count() > std::abs((in - last_time).count()))
+  {
+    // use last time
+    out = last_time;
+    ROS_DEBUG("Use old time");
+  }else{
+
+     // use new time
+     last_time = in;
+     out = in;
+     ROS_DEBUG("Use new time");
+  }
+
+  return out;
+}
+
+
+
+/**
  *  Converts mavlink time into ROS time
  **/
 ros::Time TimeConverter::convert_time(const uint32_t usec)
 {
-  // check if we have enough difference or not
-  usec_t mav_usec(usec);
-  if(ignore_times_us.count() > std::abs((mav_usec - last_time).count()))
-  {
-    mav_usec = last_time;
-    ROS_DEBUG("Use old time");
-  }else{
-     last_time = mav_usec;
-     ROS_DEBUG("Use new time");
-  }
 
-  ros::Time mav_time = convert2RosTime(mav_usec);
+  ros::Time mav_time = convert2RosTime(ignoreSmallTimeDiffs(static_cast<usec_t>(usec)));
   ros::Time now_time = ros::Time::now();
   ros::Time ros_time = mav_time + time_offset;
 

@@ -39,6 +39,8 @@ private:
 
   ros::Time convert2RosTime(usec_t in) const;
   ros::Duration convert2RosDuration(usec_t in) const;
+
+  usec_t ignoreSmallTimeDiffs(const usec_t in);
 };
 
 
