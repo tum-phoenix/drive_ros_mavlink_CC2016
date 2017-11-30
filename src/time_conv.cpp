@@ -15,7 +15,8 @@ TimeConverter::TimeConverter(usec_t reset_off_us,
    enable_time_debug(en_time_debug),
    debug_publisher(debug_pub)
 {
-
+  last_time = usec_t(0);
+  time_offset = ros::Duration(0);
 
 
 }

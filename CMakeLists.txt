@@ -31,6 +31,15 @@ install(TARGETS mavlink_phoenix_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+if(CATKIN_ENABLE_TESTING)
+    find_package(rostest REQUIRED)
+    add_rostest_gtest(mavlink_phoenix_test launch/mavlink_CC2016.test
+        test/mavlink_phoenix_test.cpp
+        src/time_conv.cpp
+        )
+    target_link_libraries(mavlink_phoenix_test ${catkin_LIBRARIES})
+endif()
+
 
 install(DIRECTORY include/${PROJECT_NAME}/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
@@ -42,3 +51,5 @@ install(DIRECTORY launch/
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
     FILES_MATCHING PATTERN "*.launch"
 )
+
+

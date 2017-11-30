@@ -32,10 +32,10 @@ private:
   const usec_t comm_offset_us;
   const usec_t ignore_times_us;
   const bool enable_time_debug;
+  ros::Publisher* debug_publisher;
 
   usec_t last_time;
   ros::Duration time_offset;
-  ros::Publisher* debug_publisher;
 
   ros::Time convert2RosTime(usec_t in) const;
   ros::Duration convert2RosDuration(usec_t in) const;

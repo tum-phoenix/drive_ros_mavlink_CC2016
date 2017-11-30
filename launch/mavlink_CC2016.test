@@ -1,0 +1,4 @@
+<launch>
+<test test-name="mavlink_test" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_test" />
+</launch>
+
