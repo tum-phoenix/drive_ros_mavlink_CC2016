@@ -33,11 +33,23 @@ install(TARGETS mavlink_phoenix_node
 
 if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
-    add_rostest_gtest(mavlink_phoenix_test launch/mavlink_CC2016.test
-        test/mavlink_phoenix_test.cpp
+
+    # unit tests
+    add_rostest_gtest(mavlink_phoenix_unit_test launch/mavlink_CC2016_unit.test
+        test/mavlink_phoenix_unit_test.cpp
         src/time_conv.cpp
         )
-    target_link_libraries(mavlink_phoenix_test ${catkin_LIBRARIES})
+    target_link_libraries(mavlink_phoenix_unit_test ${catkin_LIBRARIES})
+
+    # regression tests
+    if(ci)
+        add_rostest_gtest(mavlink_phoenix_regress_test launch/mavlink_CC2016_regress.test
+            src/mavlink_phoenix_node.cpp
+            src/time_conv.cpp
+            )
+        target_link_libraries(mavlink_phoenix_regress_test ${catkin_LIBRARIES})
+    endif()
+
 endif()
 
 

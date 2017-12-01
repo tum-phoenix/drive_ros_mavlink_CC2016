@@ -38,22 +38,34 @@ TEST(time_convert_test, ignoreSmallTimeDiffs)
 
   TimeConverter time_conv(us(0), us(0), us(100), false, NULL);
 
-  // new value bigger than offset -> use new time
+  // diff bigger than offset -> use new time
   {
     time_conv.last_time = us(0);
     EXPECT_EQ(us(200), time_conv.ignoreSmallTimeDiffs(us(200)));
   }
 
-  // new value smaller than offset -> use old time
+  // diff smaller than offset -> use old time
   {
     time_conv.last_time = us(0);
     EXPECT_EQ(us(0), time_conv.ignoreSmallTimeDiffs(us(50)));
   }
 
-  // new value equals to offset -> use new time
+  // diff equals to offset -> use new time
   {
     time_conv.last_time = us(0);
     EXPECT_EQ(us(100), time_conv.ignoreSmallTimeDiffs(us(100)));
+  }
+
+  // diff bigger to offset -> use new time
+  {
+    time_conv.last_time = us(150);
+    EXPECT_EQ(us(10), time_conv.ignoreSmallTimeDiffs(us(10)));
+  }
+
+  // diff smaller to offset -> use old time
+  {
+    time_conv.last_time = us(150);
+    EXPECT_EQ(us(150), time_conv.ignoreSmallTimeDiffs(us(100)));
   }
 
 
@@ -62,34 +74,32 @@ TEST(time_convert_test, ignoreSmallTimeDiffs)
 
 TEST(time_convert_test, convertTime)
 {
+  ros::NodeHandle n;
 
+  // null as input
+  {
+    float err = 0.00001;
 
+    TimeConverter time_conv(us(0), us(0), us(100), false, NULL);
+    time_conv.last_time = us(0);
+    time_conv.time_offset = ros::Duration(0);
+    EXPECT_NEAR(ros::Time::now().toSec(),
+                time_conv.convert_time(0).toSec(),
+                err);
+  }
 
-//  ignore_times_us = new usec_t(40);
-//  comm_offset_us = new usec_t(0);
-//  reset_offset_us = new usec_t(1000);
+  // current time as input
+  {
+    float err = 0.00001;
 
-//  enable_time_debug = false;
-
-//  ros::NodeHandle n_test;
-
-//  // zero mavlink time
-//  {
-//    uint32_t input(0);
-//    EXPECT_NEAR(ros::Time::now().toSec(), convert_time(input).toSec(), 0.001);
-//  }
-
-
-//  // mavlink with small tolerable offset
-//  {
-//    ros::Time ros_time = ros::Time::now();
-//    usec_t input(static_cast<uint32_t>(ros_time.toNSec() * pow(10,-3)));
-//    float offset = 0.0009;
-//    time_offset = ros::Duration(offset);
-//    last_time = input;
-//    sleep(offset);
-//    EXPECT_NEAR(ros_time.toSec(), convert_time(static_cast<uint32_t>(input.count())).toSec(), 0.00001);
-//  }
+    TimeConverter time_conv(us(0), us(0), us(100), false, NULL);
+    uint32_t input(ros::Time::now().toNSec() * std::pow(10,-3));
+    time_conv.last_time = us(input);
+    time_conv.time_offset = ros::Duration(0);
+    EXPECT_NEAR(ros::Time::now().toSec(),
+                time_conv.convert_time(input).toSec(),
+                err);
+  }
 
 
 }
