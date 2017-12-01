@@ -78,7 +78,7 @@ TEST(time_convert_test, convertTime)
 
   // null as input
   {
-    float err = 0.00001;
+    float err = 0.001;
 
     TimeConverter time_conv(us(0), us(0), us(100), false, NULL);
     time_conv.last_time = us(0);
@@ -90,7 +90,7 @@ TEST(time_convert_test, convertTime)
 
   // current time as input
   {
-    float err = 0.00001;
+    float err = 0.001;
 
     TimeConverter time_conv(us(0), us(0), us(100), false, NULL);
     uint32_t input(ros::Time::now().toNSec() * std::pow(10,-3));

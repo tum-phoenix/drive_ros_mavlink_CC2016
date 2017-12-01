@@ -6,6 +6,7 @@
 
     <!-- start test bag file -->
     <arg name="bag_file" value="$(find drive_ros_mavlink_cc2016)/test/mavlink_phoenix_regress_test.bag" />
+    <arg name="bag_length" value="55" />
     <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(arg bag_file)"/>
 
 
@@ -20,7 +21,7 @@
         <param name="topic" value="/from_mav/imu" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
-        <param name="test_duration" value="10" />
+        <param name="test_duration" value="$(arg bag_length)" />
     </test>
 
     <!-- test if we get an appropiate odometer message rate -->
@@ -28,7 +29,7 @@
         <param name="topic" value="/from_mav/odometer_delta" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
-        <param name="test_duration" value="10" />
+        <param name="test_duration" value="$(arg bag_length)" />
     </test>
 
     <!-- test if we get an appropiate heartbead message rate -->
@@ -36,7 +37,7 @@
         <param name="topic" value="/from_mav/heartbeat" />
         <param name="hz" value="110.0" />
         <param name="hzerror" value="5" />
-        <param name="test_duration" value="10" />
+        <param name="test_duration" value="$(arg bag_length)" />
     </test>
 
 
