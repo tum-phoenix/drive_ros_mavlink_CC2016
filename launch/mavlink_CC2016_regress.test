@@ -1,18 +1,20 @@
 <launch>
     <param name="use_sim_time" value="true"/>
+    <arg name="time_limit" value="60" />
 
     <!-- start test bag file -->
     <arg name="bag_file" value="$(find drive_ros_mavlink_cc2016)/test/mavlink_phoenix_regress_test.bag" />
     <arg name="bag_length" value="55" />
-    <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(arg bag_file)"/>
+    <node pkg="rosbag" type="play" name="player" output="log" args="--clock -l $(arg bag_file)"/>
 
     <!-- include node -->
     <include file="$(find drive_ros_mavlink_cc2016)/launch/mavlink_CC2016.launch" >
-        <arg name="output" default="log"/>
+        <arg name="output" value="log" />
+        <arg name="nice" value="" />
     </include>
 
     <!-- test if we get an appropiate imu message rate -->
-    <test test-name="imu_test" pkg="rostest" type="hztest" name="imu_test" time-limit="120.0">
+    <test test-name="imu_test" pkg="rostest" type="hztest" name="imu_test" time-limit="$(arg time_limit)">
         <param name="topic" value="/from_mav/imu" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
@@ -20,7 +22,7 @@
     </test>
 
     <!-- test if we get an appropiate odometer message rate -->
-    <test test-name="odo_test" pkg="rostest" type="hztest" name="odo_test" time-limit="120.0">
+    <test test-name="odo_test" pkg="rostest" type="hztest" name="odo_test" time-limit="$(arg time_limit)">
         <param name="topic" value="/from_mav/odometer_delta" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
@@ -28,7 +30,7 @@
     </test>
 
     <!-- test if we get an appropiate heartbead message rate -->
-    <test test-name="heartbeat_test" pkg="rostest" type="hztest" name="heartbeat_test" time-limit="120.0">
+    <test test-name="heartbeat_test" pkg="rostest" type="hztest" name="heartbeat_test" time-limit="$(arg time_limit)">
         <param name="topic" value="/from_mav/heartbeat" />
         <param name="hz" value="110.0" />
         <param name="hzerror" value="5" />
