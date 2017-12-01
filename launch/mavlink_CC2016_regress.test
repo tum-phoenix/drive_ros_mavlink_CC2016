@@ -1,20 +1,15 @@
 <launch>
-
-
     <param name="use_sim_time" value="true"/>
-
 
     <!-- start test bag file -->
     <arg name="bag_file" value="$(find drive_ros_mavlink_cc2016)/test/mavlink_phoenix_regress_test.bag" />
     <arg name="bag_length" value="55" />
     <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(arg bag_file)"/>
 
-
     <!-- include node -->
     <include file="$(find drive_ros_mavlink_cc2016)/launch/mavlink_CC2016.launch" >
         <arg name="output" default="log"/>
     </include>
-
 
     <!-- test if we get an appropiate imu message rate -->
     <test test-name="imu_test" pkg="rostest" type="hztest" name="imu_test">

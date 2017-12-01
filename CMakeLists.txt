@@ -42,7 +42,7 @@ if(CATKIN_ENABLE_TESTING)
     target_link_libraries(mavlink_phoenix_unit_test ${catkin_LIBRARIES})
 
     # regression tests
-    if(ci)
+    if($ENV{CI})
         add_rostest_gtest(mavlink_phoenix_regress_test launch/mavlink_CC2016_regress.test
             src/mavlink_phoenix_node.cpp
             src/time_conv.cpp
