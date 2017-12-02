@@ -7,24 +7,28 @@
 <!-- forward output to [screen|log] -->
 <arg name="output" default="screen"/>
 
+<!-- enable / disable time debug output -->
+<arg name="enable_time_debug" default="false" />
+
+<!-- enable / disable imu debugging to file -->
+<arg name="enable_imu_debug" default="false" />
+
+<!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->
+<arg name="reset_offset" default="10000" />
+
+<!-- ignore time steps smaller than this and use the same time instead (easier to fuse messages later on) [microsec] -->
+<arg name="ignore_times" value="500" />
+
+<!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
+<!-- TODO: calculate this value somehow -->
+<arg name="comm_offset" value="0" />
 
 <node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="$(arg output)" launch-prefix="$(arg nice)">
-    <!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
-    <!-- TODO: calculate this value somehow -->
-    <param name="comm_offset" type="int" value="0" />
-
-    <!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->
-    <param name="reset_offset" type="int" value="10000" />
-
-    <!-- ignore time steps smaller than this and use the same time instead (easier to fuse messages later on) [microsec] -->
-    <param name="ignore_times" type="int" value="500" />
-
-    <!-- enable / disable time debug output -->
-    <param name="enable_time_debug" type="bool" value="false" />
-
-    <!-- enable / disable imu debugging to file -->
-    <param name="enable_imu_debug" type="bool" value="false" />
-
+    <param name="comm_offset" type="int" value="$(arg comm_offset)" />
+    <param name="reset_offset" type="int" value="$(arg reset_offset)" />
+    <param name="ignore_times" type="int" value="$(arg ignore_times)" />
+    <param name="enable_time_debug" type="bool" value="$(arg enable_time_debug)" />
+    <param name="enable_imu_debug" type="bool" value="$(arg enable_imu_debug)" />
 </node>
 
 </launch>

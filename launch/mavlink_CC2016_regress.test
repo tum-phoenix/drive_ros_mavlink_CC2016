@@ -1,17 +1,26 @@
 <launch>
-    <param name="use_sim_time" value="true"/>
-    <arg name="time_limit" value="60" />
+    <arg name="time_limit" value="60"/>
+    <arg name="reset_offset" value="10000"/>
 
     <!-- start test bag file -->
     <arg name="bag_file" value="$(find drive_ros_mavlink_cc2016)/test/mavlink_phoenix_regress_test.bag" />
     <arg name="bag_length" value="55" />
-    <node pkg="rosbag" type="play" name="player" output="log" args="--clock -l $(arg bag_file)"/>
+    <node pkg="rosbag" type="play" name="player" output="log" args="-l $(arg bag_file)"/>
 
     <!-- include node -->
     <include file="$(find drive_ros_mavlink_cc2016)/launch/mavlink_CC2016.launch" >
         <arg name="output" value="log" />
         <arg name="nice" value="" />
+        <arg name="enable_time_debug" value="true" />
+        <arg name="reset_offset" value="$(arg reset_offset)" />
     </include>
+
+    <!-- test if minimum and maximum diff is ok -->
+    <test test-name="diff_time_test" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_debug_time_test" name="diff_time_test" time-limit="$(arg time_limit)">
+        <param name="min_diff_us" value="-$(arg reset_offset)" />
+        <param name="max_diff_us" value="+$(arg reset_offset)" />
+        <param name="test_duration" value="$(arg bag_length)" />
+    </test>
 
     <!-- test if we get an appropiate imu message rate -->
     <test test-name="imu_test" pkg="rostest" type="hztest" name="imu_test" time-limit="$(arg time_limit)">
