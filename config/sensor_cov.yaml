@@ -1,0 +1,9 @@
+# More infos: https://github.com/lms-org/config_auto_drive/blob/master/configs/mavlink_to_data.xml
+sensor_cov:
+    odometer_velo_cov_xx: 0.1
+    imu_acc_cov_xx: 0.5
+    imu_acc_cov_yy: 0.5
+    imu_acc_cov_zz: 0.5
+    imu_gyro_cov_xx: 0.025
+    imu_gyro_cov_yy: 0.025
+    imu_gyro_cov_zz: 0.025

@@ -6,6 +6,7 @@
 #include <drive_ros_mavlink_cc2016/phoenix/mavlink.h>
 #include <drive_ros_mavlink_cc2016/time_conv.h>
 #include <geometry_msgs/Vector3.h>
+#include <sensor_msgs/Imu.h>
 #include <fstream>
 #include <ros/ros.h>
 
@@ -42,6 +43,14 @@ ros::Publisher from_mav_command_pub;
 // parameter
 static bool enable_imu_debug;
 static std::ofstream file_log;
+
+static double odometer_velo_cov_xx;
+static double imu_acc_cov_xx;
+static double imu_acc_cov_yy;
+static double imu_acc_cov_zz;
+static double imu_gyro_cov_xx;
+static double imu_gyro_cov_yy;
+static double imu_gyro_cov_zz;
 
 // time converter class
 static TimeConverter* time_conv;
@@ -401,10 +410,7 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'TELEMETRY' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_IMU: {
-        drive_ros_msgs::mav_cc16_IMU m;
-
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
+        sensor_msgs::Imu m;
 
         mavlink_imu_t imu_in;
         memset(&imu_in, 0, sizeof(imu_in));
@@ -412,15 +418,22 @@ void from_mav_mav_raw_data_callback(
 
         m.header.stamp = time_conv->convert_time(imu_in.timestamp);
         m.header.frame_id = "imu";
-        m.acc.x = imu_in.xacc;
-        m.acc.y = imu_in.yacc;
-        m.acc.z = imu_in.zacc;
-        m.gyro.x = imu_in.xgyro;
-        m.gyro.y = imu_in.ygyro;
-        m.gyro.z = imu_in.zgyro;
-        m.mag.x = imu_in.xmag;
-        m.mag.y = imu_in.ymag;
-        m.mag.z = imu_in.zmag;
+
+        m.linear_acceleration.x = imu_in.xacc;
+        m.linear_acceleration.y = imu_in.yacc;
+        m.linear_acceleration.z = imu_in.zacc;
+        m.linear_acceleration_covariance.elems[0] = imu_acc_cov_xx;
+        m.linear_acceleration_covariance.elems[4] = imu_acc_cov_yy;
+        m.linear_acceleration_covariance.elems[8] = imu_acc_cov_zz;
+
+        m.angular_velocity.x = imu_in.xgyro;
+        m.angular_velocity.y = imu_in.ygyro;
+        m.angular_velocity.z = imu_in.zgyro;
+        m.angular_velocity_covariance.elems[0] = imu_acc_cov_xx;
+        m.angular_velocity_covariance.elems[4] = imu_acc_cov_yy;
+        m.angular_velocity_covariance.elems[8] = imu_acc_cov_zz;
+
+        // magnetometer doesn't work
 
         if(enable_imu_debug)
         {
@@ -759,6 +772,22 @@ int main(int argc, char **argv) {
   }
 
 
+  // sensor covariances
+  {
+    if( pnh.getParam("sensor_cov/odometer_velo_cov_xx", odometer_velo_cov_xx) &&
+        pnh.getParam("sensor_cov/imu_acc_cov_xx", imu_acc_cov_xx) &&
+        pnh.getParam("sensor_cov/imu_acc_cov_yy", imu_acc_cov_yy) &&
+        pnh.getParam("sensor_cov/imu_acc_cov_zz", imu_acc_cov_zz) &&
+        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_xx) &&
+        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_yy) &&
+        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_zz))
+    {
+      ROS_INFO("Sensor covariances loaded successfully");
+    }else{
+      ROS_ERROR("Error loading sensor covariances!");
+      throw std::runtime_error("Error loading parameters");
+    }
+  }
 
 
   to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_msgs::mav_RAW_DATA>("/to_mav/mav_raw_data", 10);
@@ -771,7 +800,6 @@ int main(int argc, char **argv) {
   from_mav_heartbeat_pub =          n.advertise<drive_ros_msgs::mav_cc16_HEARTBEAT>("/from_mav/heartbeat", 10);
   from_mav_debug_pub =              n.advertise<drive_ros_msgs::mav_cc16_DEBUG>("/from_mav/debug", 10);
   from_mav_telemetry_pub =          n.advertise<drive_ros_msgs::mav_cc16_TELEMETRY>("/from_mav/telemetry", 10);
-  from_mav_imu_pub =                n.advertise<drive_ros_msgs::mav_cc16_IMU>("/from_mav/imu", 10);
   from_mav_odometer_abs_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_ABS>("/from_mav/odometer_abs", 10);
   from_mav_odometer_raw_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_RAW>("/from_mav/odometer_raw", 10);
   from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_DELTA>("/from_mav/odometer_delta", 10);
@@ -785,6 +813,8 @@ int main(int argc, char **argv) {
   from_mav_config_param_bool_pub =  n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_BOOL>("/from_mav/config_param_bool", 10);
   from_mav_config_param_float_pub = n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
   from_mav_command_pub =            n.advertise<drive_ros_msgs::mav_cc16_COMMAND>("/from_mav/command", 10);
+
+  from_mav_imu_pub =                n.advertise<sensor_msgs::Imu>("/from_mav/imu", 10);
 
 
   /**

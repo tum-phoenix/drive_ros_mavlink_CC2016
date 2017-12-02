@@ -29,6 +29,7 @@
     <param name="ignore_times" type="int" value="$(arg ignore_times)" />
     <param name="enable_time_debug" type="bool" value="$(arg enable_time_debug)" />
     <param name="enable_imu_debug" type="bool" value="$(arg enable_imu_debug)" />
+    <rosparam command="load" file="$(find drive_ros_mavlink_cc2016)/config/sensor_cov.yaml"/>
 </node>
 
 </launch>
