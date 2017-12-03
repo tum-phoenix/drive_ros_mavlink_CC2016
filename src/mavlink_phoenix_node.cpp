@@ -7,6 +7,7 @@
 #include <drive_ros_mavlink_cc2016/time_conv.h>
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Imu.h>
+#include <drive_ros_msgs/VehicleEncoder.h>
 #include <fstream>
 #include <ros/ros.h>
 
@@ -44,7 +45,8 @@ ros::Publisher from_mav_command_pub;
 static bool enable_imu_debug;
 static std::ofstream file_log;
 
-static double odometer_velo_cov_xx;
+static double odometer_pos_rel_var;
+static double odometer_velo_var;
 static double imu_acc_cov_xx;
 static double imu_acc_cov_yy;
 static double imu_acc_cov_zz;
@@ -495,25 +497,24 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_RAW' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_DELTA: {
-        drive_ros_msgs::mav_cc16_ODOMETER_DELTA m;
+        drive_ros_msgs::VehicleEncoder m;
+        drive_ros_msgs::EncoderLinear enc;
 
-        m.sysid = mav_msg.sysid;
-        m.compid = mav_msg.compid;
 
         mavlink_odometer_delta_t odometer_delta_in;
         memset(&odometer_delta_in, 0, sizeof(odometer_delta_in));
         mavlink_msg_odometer_delta_decode(&mav_msg, &odometer_delta_in);
 
-        m.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
-        m.header.frame_id = "rear_axis_middle";
-        m.delta = odometer_delta_in.delta;
-        m.dist.x = odometer_delta_in.xdist;
-        m.dist.y = odometer_delta_in.ydist;
-        m.dist.z = odometer_delta_in.zdist;
-        m.velocity.x = odometer_delta_in.xvelocity;
-        m.velocity.y = odometer_delta_in.yvelocity;
-        m.velocity.z = odometer_delta_in.zvelocity;
-        m.quality = odometer_delta_in.quality;
+        enc.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
+        enc.header.frame_id = "rear_axis_middle";
+
+        enc.pos_rel = odometer_delta_in.xdist;
+        enc.pos_rel_var = odometer_pos_rel_var;
+
+        enc.vel = odometer_delta_in.xvelocity;
+        enc.vel_var = odometer_velo_var;
+
+        m.encoder.push_back(enc);
 
         from_mav_odometer_delta_pub.publish(m);
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA' from mavlink.");
@@ -774,7 +775,8 @@ int main(int argc, char **argv) {
 
   // sensor covariances
   {
-    if( pnh.getParam("sensor_cov/odometer_velo_cov_xx", odometer_velo_cov_xx) &&
+    if( pnh.getParam("sensor_cov/odometer_velo_var", odometer_velo_var) &&
+        pnh.getParam("sensor_cov/odometer_pos_rel_var", odometer_pos_rel_var) &&
         pnh.getParam("sensor_cov/imu_acc_cov_xx", imu_acc_cov_xx) &&
         pnh.getParam("sensor_cov/imu_acc_cov_yy", imu_acc_cov_yy) &&
         pnh.getParam("sensor_cov/imu_acc_cov_zz", imu_acc_cov_zz) &&
@@ -802,7 +804,6 @@ int main(int argc, char **argv) {
   from_mav_telemetry_pub =          n.advertise<drive_ros_msgs::mav_cc16_TELEMETRY>("/from_mav/telemetry", 10);
   from_mav_odometer_abs_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_ABS>("/from_mav/odometer_abs", 10);
   from_mav_odometer_raw_pub =       n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_RAW>("/from_mav/odometer_raw", 10);
-  from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_DELTA>("/from_mav/odometer_delta", 10);
   from_mav_odometer_delta_raw_pub = n.advertise<drive_ros_msgs::mav_cc16_ODOMETER_DELTA_RAW>("/from_mav/odometer_delta_raw", 10);
   from_mav_odometer_pub =           n.advertise<drive_ros_msgs::mav_cc16_ODOMETER>("/from_mav/odometer", 10);
   from_mav_proximity_pub =          n.advertise<drive_ros_msgs::mav_cc16_PROXIMITY>("/from_mav/proximity", 10);
@@ -814,7 +815,9 @@ int main(int argc, char **argv) {
   from_mav_config_param_float_pub = n.advertise<drive_ros_msgs::mav_cc16_CONFIG_PARAM_FLOAT>("/from_mav/config_param_float", 10);
   from_mav_command_pub =            n.advertise<drive_ros_msgs::mav_cc16_COMMAND>("/from_mav/command", 10);
 
+  // special message types
   from_mav_imu_pub =                n.advertise<sensor_msgs::Imu>("/from_mav/imu", 10);
+  from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::VehicleEncoder>("/from_mav/odometer_delta", 10);
 
 
   /**
