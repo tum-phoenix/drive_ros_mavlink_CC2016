@@ -39,6 +39,19 @@ ros::Publisher from_mav_config_param_float_pub;
 ros::Publisher from_mav_command_pub;
 
 
+// covariance matrix
+enum COV{
+  XX = 0,
+  XY = 1,
+  XZ = 2,
+  YX = 3,
+  YY = 4,
+  YZ = 5,
+  ZX = 6,
+  ZY = 7,
+  ZZ = 8
+};
+
 
 
 // parameter
@@ -424,16 +437,16 @@ void from_mav_mav_raw_data_callback(
         m.linear_acceleration.x = imu_in.xacc;
         m.linear_acceleration.y = imu_in.yacc;
         m.linear_acceleration.z = imu_in.zacc;
-        m.linear_acceleration_covariance.elems[0] = imu_acc_cov_xx;
-        m.linear_acceleration_covariance.elems[4] = imu_acc_cov_yy;
-        m.linear_acceleration_covariance.elems[8] = imu_acc_cov_zz;
+        m.linear_acceleration_covariance.elems[COV::XX] = imu_acc_cov_xx;
+        m.linear_acceleration_covariance.elems[COV::YY] = imu_acc_cov_yy;
+        m.linear_acceleration_covariance.elems[COV::ZZ] = imu_acc_cov_zz;
 
         m.angular_velocity.x = imu_in.xgyro;
         m.angular_velocity.y = imu_in.ygyro;
         m.angular_velocity.z = imu_in.zgyro;
-        m.angular_velocity_covariance.elems[0] = imu_acc_cov_xx;
-        m.angular_velocity_covariance.elems[4] = imu_acc_cov_yy;
-        m.angular_velocity_covariance.elems[8] = imu_acc_cov_zz;
+        m.angular_velocity_covariance.elems[COV::XX] = imu_acc_cov_xx;
+        m.angular_velocity_covariance.elems[COV::YY] = imu_acc_cov_yy;
+        m.angular_velocity_covariance.elems[COV::ZZ] = imu_acc_cov_zz;
 
         // magnetometer doesn't work
 
