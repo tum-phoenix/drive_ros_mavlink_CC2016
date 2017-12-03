@@ -518,8 +518,8 @@ void from_mav_mav_raw_data_callback(
         memset(&odometer_delta_in, 0, sizeof(odometer_delta_in));
         mavlink_msg_odometer_delta_decode(&mav_msg, &odometer_delta_in);
 
-        enc.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
-        enc.header.frame_id = "rear_axis_middle";
+        m.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
+        m.header.frame_id = "rear_axis_middle";
 
         enc.pos_rel = odometer_delta_in.xdist;
         enc.pos_rel_var = odometer_pos_rel_var;
