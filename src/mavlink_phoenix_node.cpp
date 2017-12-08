@@ -521,13 +521,11 @@ void from_mav_mav_raw_data_callback(
         m.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
         m.header.frame_id = "rear_axis_middle";
 
-        enc.pos_rel = odometer_delta_in.xdist;
-        enc.pos_rel_var = odometer_pos_rel_var;
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel = odometer_delta_in.xdist;
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel_var = odometer_pos_rel_var;
 
-        enc.vel = odometer_delta_in.xvelocity;
-        enc.vel_var = odometer_velo_var;
-
-        m.encoder.push_back(enc);
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel = odometer_delta_in.xvelocity;
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel_var = odometer_velo_var;
 
         from_mav_odometer_delta_pub.publish(m);
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA' from mavlink.");
