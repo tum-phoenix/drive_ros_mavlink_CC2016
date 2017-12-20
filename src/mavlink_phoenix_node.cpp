@@ -444,9 +444,9 @@ void from_mav_mav_raw_data_callback(
         m.angular_velocity.x = imu_in.xgyro;
         m.angular_velocity.y = imu_in.ygyro;
         m.angular_velocity.z = imu_in.zgyro;
-        m.angular_velocity_covariance.elems[COV::XX] = imu_acc_cov_xx;
-        m.angular_velocity_covariance.elems[COV::YY] = imu_acc_cov_yy;
-        m.angular_velocity_covariance.elems[COV::ZZ] = imu_acc_cov_zz;
+        m.angular_velocity_covariance.elems[COV::XX] = imu_gyro_cov_xx;
+        m.angular_velocity_covariance.elems[COV::YY] = imu_gyro_cov_yy;
+        m.angular_velocity_covariance.elems[COV::ZZ] = imu_gyro_cov_zz;
 
         // magnetometer doesn't work
 
