@@ -10,7 +10,7 @@
 <!-- enable / disable time debug output -->
 <arg name="enable_time_debug" default="false" />
 
-<!-- enable / disable imu debugging to file -->
+<!-- enable / disable imu debugging to file (/tmp/out_imu.csv) -->
 <arg name="enable_imu_debug" default="false" />
 
 <!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->

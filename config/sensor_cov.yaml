@@ -2,9 +2,9 @@
 sensor_cov:
     odometer_pos_rel_var: 0
     odometer_velo_var: 0.1
-    imu_acc_cov_xx: 0.5
-    imu_acc_cov_yy: 0.5
-    imu_acc_cov_zz: 0.5
-    imu_gyro_cov_xx: 0.025
-    imu_gyro_cov_yy: 0.025
-    imu_gyro_cov_zz: 0.025
+    imu_acc_cov_xx: 0.1 # 0.5
+    imu_acc_cov_yy: 0.1 # 0.5
+    imu_acc_cov_zz: 0.2 # 0.5
+    imu_gyro_cov_xx: 0.0002 # 0.025
+    imu_gyro_cov_yy: 0.0002 #0.025
+    imu_gyro_cov_zz: 0.0002 #0.025

@@ -70,6 +70,8 @@ static double imu_gyro_cov_zz;
 // time converter class
 static TimeConverter* time_conv;
 
+static const double gravity = 9.81;
+
 
 /**
  *
@@ -434,9 +436,9 @@ void from_mav_mav_raw_data_callback(
         m.header.stamp = time_conv->convert_time(imu_in.timestamp);
         m.header.frame_id = "imu";
 
-        m.linear_acceleration.x = imu_in.xacc;
-        m.linear_acceleration.y = imu_in.yacc;
-        m.linear_acceleration.z = imu_in.zacc;
+        m.linear_acceleration.x = imu_in.xacc * gravity; // convert g's to m/s2
+        m.linear_acceleration.y = imu_in.yacc * gravity;
+        m.linear_acceleration.z = imu_in.zacc * gravity;
         m.linear_acceleration_covariance.elems[COV::XX] = imu_acc_cov_xx;
         m.linear_acceleration_covariance.elems[COV::YY] = imu_acc_cov_yy;
         m.linear_acceleration_covariance.elems[COV::ZZ] = imu_acc_cov_zz;
@@ -452,9 +454,9 @@ void from_mav_mav_raw_data_callback(
 
         if(enable_imu_debug)
         {
-          file_log << imu_in.xacc  << ",";
-          file_log << imu_in.yacc  << ",";
-          file_log << imu_in.zacc  << ",";
+          file_log << imu_in.xacc*gravity  << ",";
+          file_log << imu_in.yacc*gravity  << ",";
+          file_log << imu_in.zacc*gravity  << ",";
           file_log << imu_in.xgyro << ",";
           file_log << imu_in.ygyro << ",";
           file_log << imu_in.zgyro << ",";
