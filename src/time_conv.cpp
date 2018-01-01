@@ -6,12 +6,10 @@
  **/
 TimeConverter::TimeConverter(usec_t reset_off_us,
                              usec_t comm_off_us,
-                             usec_t ign_times_us,
                              bool en_time_debug,
                              ros::Publisher* debug_pub):
    reset_offset_us(reset_off_us),
    comm_offset_us(comm_off_us),
-   ignore_times_us(ign_times_us),
    enable_time_debug(en_time_debug),
    debug_publisher(debug_pub)
 {
@@ -41,30 +39,6 @@ ros::Duration TimeConverter::convert2RosDuration(usec_t in) const
 }
 
 
-/**
- *  this function ignores small time diffs
- **/
-TimeConverter::usec_t TimeConverter::ignoreSmallTimeDiffs(const usec_t in)
-{
-  usec_t out;
-
-  // check if we have enough difference
-  if(ignore_times_us.count() > std::abs((in - last_time).count()))
-  {
-    // use last time
-    out = last_time;
-    ROS_DEBUG("Use old time");
-  }else{
-
-     // use new time
-     last_time = in;
-     out = in;
-     ROS_DEBUG("Use new time");
-  }
-
-  return out;
-}
-
 
 
 /**
@@ -73,7 +47,7 @@ TimeConverter::usec_t TimeConverter::ignoreSmallTimeDiffs(const usec_t in)
 ros::Time TimeConverter::convert_time(const uint32_t usec)
 {
 
-  ros::Time mav_time = convert2RosTime(ignoreSmallTimeDiffs(static_cast<usec_t>(usec)));
+  ros::Time mav_time = convert2RosTime(static_cast<usec_t>(usec));
   ros::Time now_time = ros::Time::now();
   ros::Time ros_time = mav_time + time_offset;
 

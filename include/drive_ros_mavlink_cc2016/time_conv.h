@@ -20,7 +20,6 @@ public:
 
   TimeConverter(usec_t reset_off_us,
                 usec_t comm_off_us,
-                usec_t ign_times_us,
                 bool enable_time_debug,
                 ros::Publisher* debug_pub);
 
@@ -30,7 +29,6 @@ public:
 private:
   const usec_t reset_offset_us;
   const usec_t comm_offset_us;
-  const usec_t ignore_times_us;
   const bool enable_time_debug;
   ros::Publisher* debug_publisher;
 
@@ -39,8 +37,6 @@ private:
 
   ros::Time convert2RosTime(usec_t in) const;
   ros::Duration convert2RosDuration(usec_t in) const;
-
-  usec_t ignoreSmallTimeDiffs(const usec_t in);
 };
 
 

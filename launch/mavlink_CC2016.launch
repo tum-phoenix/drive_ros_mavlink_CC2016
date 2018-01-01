@@ -16,8 +16,6 @@
 <!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->
 <arg name="reset_offset" default="10000" />
 
-<!-- ignore time steps smaller than this and use the same time instead (easier to fuse messages later on) [microsec] -->
-<arg name="ignore_times" value="500" />
 
 <!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
 <!-- TODO: calculate this value somehow -->
@@ -26,7 +24,6 @@
 <node name="mavlink" pkg="drive_ros_mavlink_cc2016" type="mavlink_phoenix_node" output="$(arg output)" launch-prefix="$(arg nice)">
     <param name="comm_offset" type="int" value="$(arg comm_offset)" />
     <param name="reset_offset" type="int" value="$(arg reset_offset)" />
-    <param name="ignore_times" type="int" value="$(arg ignore_times)" />
     <param name="enable_time_debug" type="bool" value="$(arg enable_time_debug)" />
     <param name="enable_imu_debug" type="bool" value="$(arg enable_imu_debug)" />
     <rosparam command="load" file="$(find drive_ros_mavlink_cc2016)/config/sensor_cov.yaml"/>

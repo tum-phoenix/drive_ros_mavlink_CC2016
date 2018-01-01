@@ -740,10 +740,9 @@ int main(int argc, char **argv) {
 
   // time conversion parameters
   {
-    int reset_offset_us_int, comm_offset_us_int, ignore_times_us_int;
+    int reset_offset_us_int, comm_offset_us_int;
     pnh.param<int>("reset_offset", reset_offset_us_int, 5000);
     pnh.param<int>("comm_offset", comm_offset_us_int, 0);
-    pnh.param<int>("ignore_times", ignore_times_us_int, 0);
 
     bool enable_time_debug_bool;
     pnh.param<bool>("enable_time_debug", enable_time_debug_bool, false);
@@ -759,7 +758,6 @@ int main(int argc, char **argv) {
 
     time_conv = new TimeConverter(static_cast<TimeConverter::usec_t>(reset_offset_us_int),
                                   static_cast<TimeConverter::usec_t>(comm_offset_us_int),
-                                  static_cast<TimeConverter::usec_t>(ignore_times_us_int),
                                   enable_time_debug_bool,
                                   &debug_pub);
   }
