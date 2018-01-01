@@ -58,19 +58,36 @@ enum COV{
 static bool enable_imu_debug;
 static std::ofstream file_log;
 
-static double odometer_pos_rel_var;
-static double odometer_velo_var;
-static double imu_acc_cov_xx;
-static double imu_acc_cov_yy;
-static double imu_acc_cov_zz;
-static double imu_gyro_cov_xx;
-static double imu_gyro_cov_yy;
-static double imu_gyro_cov_zz;
+static std::vector<double> odo_pos_var;
+static std::vector<double> odo_vel_var;
+static std::vector<double> imu_acc_cov_xx;
+static std::vector<double> imu_acc_cov_yy;
+static std::vector<double> imu_acc_cov_zz;
+static std::vector<double> imu_gyr_cov_xx;
+static std::vector<double> imu_gyr_cov_yy;
+static std::vector<double> imu_gyr_cov_zz;
+
+
+static double current_vel = 0;
 
 // time converter class
 static TimeConverter* time_conv;
 
 static const double gravity = 9.81;
+
+
+// calculates the covariances based on the current velocity
+double calculateCovariance(const std::vector<double> coef, const double vel)
+{
+  double out = 0;
+  for(int i=0; i<coef.size(); i++)
+  {
+    out += coef.at(i) * std::pow(vel, i);
+  }
+
+  return out;
+}
+
 
 
 /**
@@ -439,21 +456,22 @@ void from_mav_mav_raw_data_callback(
         m.linear_acceleration.x = imu_in.xacc * gravity; // convert g's to m/s2
         m.linear_acceleration.y = imu_in.yacc * gravity;
         m.linear_acceleration.z = imu_in.zacc * gravity;
-        m.linear_acceleration_covariance.elems[COV::XX] = imu_acc_cov_xx;
-        m.linear_acceleration_covariance.elems[COV::YY] = imu_acc_cov_yy;
-        m.linear_acceleration_covariance.elems[COV::ZZ] = imu_acc_cov_zz;
+        m.linear_acceleration_covariance.elems[COV::XX] = calculateCovariance(imu_acc_cov_xx, current_vel);
+        m.linear_acceleration_covariance.elems[COV::YY] = calculateCovariance(imu_acc_cov_yy, current_vel);
+        m.linear_acceleration_covariance.elems[COV::ZZ] = calculateCovariance(imu_acc_cov_zz, current_vel);
 
         m.angular_velocity.x = imu_in.xgyro;
         m.angular_velocity.y = imu_in.ygyro;
         m.angular_velocity.z = imu_in.zgyro;
-        m.angular_velocity_covariance.elems[COV::XX] = imu_gyro_cov_xx;
-        m.angular_velocity_covariance.elems[COV::YY] = imu_gyro_cov_yy;
-        m.angular_velocity_covariance.elems[COV::ZZ] = imu_gyro_cov_zz;
+        m.angular_velocity_covariance.elems[COV::XX] = calculateCovariance(imu_gyr_cov_xx, current_vel);
+        m.angular_velocity_covariance.elems[COV::YY] = calculateCovariance(imu_gyr_cov_yy, current_vel);
+        m.angular_velocity_covariance.elems[COV::ZZ] = calculateCovariance(imu_gyr_cov_zz, current_vel);
 
         // magnetometer doesn't work
 
         if(enable_imu_debug)
         {
+          file_log << time_conv->convert_time(imu_in.timestamp) << ",";
           file_log << imu_in.xacc*gravity  << ",";
           file_log << imu_in.yacc*gravity  << ",";
           file_log << imu_in.zacc*gravity  << ",";
@@ -524,10 +542,13 @@ void from_mav_mav_raw_data_callback(
         m.header.frame_id = "rear_axis_middle";
 
         m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel = odometer_delta_in.xdist;
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel_var = odometer_pos_rel_var;
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel_var = calculateCovariance(odo_pos_var, current_vel);
 
         m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel = odometer_delta_in.xvelocity;
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel_var = odometer_velo_var;
+        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel_var = calculateCovariance(odo_vel_var, current_vel);
+
+        // save current velocity for covariance calculation
+        current_vel = odometer_delta_in.xvelocity;
 
         from_mav_odometer_delta_pub.publish(m);
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA' from mavlink.");
@@ -771,6 +792,7 @@ int main(int argc, char **argv) {
     {
       file_log.open("/tmp/out_imu.csv");
 
+      file_log << "timestamp"  << ",";
       file_log << "xacc"  << ",";
       file_log << "yacc"  << ",";
       file_log << "zacc"  << ",";
@@ -786,14 +808,14 @@ int main(int argc, char **argv) {
 
   // sensor covariances
   {
-    if( pnh.getParam("sensor_cov/odometer_velo_var", odometer_velo_var) &&
-        pnh.getParam("sensor_cov/odometer_pos_rel_var", odometer_pos_rel_var) &&
+    if( pnh.getParam("sensor_cov/odo_vel_var", odo_vel_var) &&
+        pnh.getParam("sensor_cov/odo_pos_var", odo_pos_var) &&
         pnh.getParam("sensor_cov/imu_acc_cov_xx", imu_acc_cov_xx) &&
         pnh.getParam("sensor_cov/imu_acc_cov_yy", imu_acc_cov_yy) &&
         pnh.getParam("sensor_cov/imu_acc_cov_zz", imu_acc_cov_zz) &&
-        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_xx) &&
-        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_yy) &&
-        pnh.getParam("sensor_cov/imu_gyro_cov_zz", imu_gyro_cov_zz))
+        pnh.getParam("sensor_cov/imu_gyr_cov_zz", imu_gyr_cov_xx) &&
+        pnh.getParam("sensor_cov/imu_gyr_cov_zz", imu_gyr_cov_yy) &&
+        pnh.getParam("sensor_cov/imu_gyr_cov_zz", imu_gyr_cov_zz))
     {
       ROS_INFO("Sensor covariances loaded successfully");
     }else{
