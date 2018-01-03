@@ -455,7 +455,7 @@ void from_mav_mav_raw_data_callback(
 
         m.linear_acceleration.x = imu_in.xacc * gravity; // convert g's to m/s2
         m.linear_acceleration.y = imu_in.yacc * gravity;
-        m.linear_acceleration.z = imu_in.zacc * gravity;
+        m.linear_acceleration.z = -imu_in.zacc * gravity; // wrong orientation
         m.linear_acceleration_covariance.elems[COV::XX] = calculateCovariance(imu_acc_cov_xx, current_vel);
         m.linear_acceleration_covariance.elems[COV::YY] = calculateCovariance(imu_acc_cov_yy, current_vel);
         m.linear_acceleration_covariance.elems[COV::ZZ] = calculateCovariance(imu_acc_cov_zz, current_vel);
