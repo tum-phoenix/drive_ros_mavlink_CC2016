@@ -5,6 +5,7 @@
 #include <drive_ros_mavlink_cc2016/mavlink2ros.h>
 #include <drive_ros_mavlink_cc2016/phoenix/mavlink.h>
 #include <drive_ros_mavlink_cc2016/time_conv.h>
+#include <drive_ros_mavlink_cc2016/calc_cov.h>
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Imu.h>
 #include <drive_ros_msgs/VehicleEncoder.h>
@@ -82,20 +83,6 @@ static double current_vel = 0;
 static TimeConverter* time_conv;
 
 static const double gravity = 9.81;
-
-
-// calculates the covariances based on the current velocity
-double calculateCovariance(const std::vector<double> coef, const double vel)
-{
-  double out = 0;
-  for(int i=0; i<coef.size(); i++)
-  {
-    out += coef.at(coef.size()-1-i) * std::pow(vel, i);
-  }
-
-  // this should never happen, but try to avoid values below 0 anyway
-  return std::max(out, double(0));
-}
 
 
 

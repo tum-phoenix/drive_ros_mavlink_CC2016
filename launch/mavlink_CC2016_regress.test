@@ -1,4 +1,7 @@
 <launch>
+<arg name="enable_regress_test" value="true"/>
+<group if="$(arg enable_regress_test)">
+
     <arg name="time_limit" value="60"/>
     <arg name="reset_offset" value="10000"/>
 
@@ -47,6 +50,6 @@
     </test>
 
 
-
+</group>
 </launch>
 

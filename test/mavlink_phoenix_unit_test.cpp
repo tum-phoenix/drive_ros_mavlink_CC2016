@@ -1,11 +1,21 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <limits.h>
+#include <random>
+#include <ctime>
 
 #define private public
 #include "drive_ros_mavlink_cc2016/time_conv.h"
+#include "drive_ros_mavlink_cc2016/calc_cov.h"
 
 typedef TimeConverter::usec_t us;
+
+double fRand(float fMin, float fMax)
+{
+  double f = (double)rand()/RAND_MAX;
+  return fMin + f * (fMax - fMin);
+}
+
 
 TEST(time_convert_test, convert2RosTimeDuration)
 {
@@ -62,8 +72,75 @@ TEST(time_convert_test, convertTime)
                 time_conv.convert_time(input).toSec(),
                 err);
   }
+}
 
 
+TEST(calculate_covariance_test, calculateCov)
+{
+
+
+  // coefficient is zero
+  std::vector<double> a;
+  a.push_back(0);
+  double values[] = {
+                    std::numeric_limits<double>::min(),
+                    -1, 0, 1,
+                    std::numeric_limits<double>::max()
+                  };
+
+  for(int i=0; i<sizeof(values)/sizeof(double); i++)
+  {
+    EXPECT_FLOAT_EQ(0, calculateCovariance(a, values[i]));
+  }
+
+  // one non zero coefficient
+  a.pop_back();
+  a.push_back(1);
+
+  for(int i=0; i<sizeof(values)/sizeof(double); i++)
+  {
+    EXPECT_FLOAT_EQ(1, calculateCovariance(a, values[i]));
+  }
+
+  // two non zero coefficients
+  a.push_back(-1);
+  EXPECT_FLOAT_EQ(0, calculateCovariance(a, 1));
+  EXPECT_FLOAT_EQ(1, calculateCovariance(a, 2));
+  EXPECT_FLOAT_EQ(0, calculateCovariance(a,-2));
+
+  // three non zero coefficients
+  a.push_back(0.5);
+  EXPECT_FLOAT_EQ(0.5, calculateCovariance(a, 1));
+  EXPECT_FLOAT_EQ(2.5, calculateCovariance(a, 2));
+  EXPECT_FLOAT_EQ(6.5, calculateCovariance(a,-2));
+
+  // small fuzzy test
+  std::srand(std::time(NULL));  // seed
+
+  std::vector<double> b;
+
+  std::cerr << "Using the following coefficients: ";
+  for(int i=0; i<5; i++)
+  {
+    double ran = fRand(-100, 100);
+    b.push_back(ran);
+    std::cerr << ran << ",";
+  }
+  std::cerr << std::endl;
+
+  for(int i=0; i<10000; i++)
+  {
+    ASSERT_NO_THROW(
+      double vel = fRand(-100, 100);
+      double res = calculateCovariance(a, vel);
+
+      // check if result is toxic
+      if(std::isnan(res) || std::isinf(res) || 0 > res){
+         std::cerr << "Problem with vel: " << vel << std::endl;
+         throw("Something went wrong!");
+      }
+    );
+  }
 }
 
 
