@@ -447,7 +447,7 @@ void from_mav_mav_raw_data_callback(
         mavlink_msg_imu_decode(&mav_msg, &imu_in);
 
         m.header.stamp = time_conv->convert_time(imu_in.timestamp);
-        m.header.frame_id = "imu";
+        m.header.frame_id = "imu_link";
 
         m.linear_acceleration.x = imu_in.xacc * gravity   - imu_acc_bias_xx; // convert g's to m/s2
         m.linear_acceleration.y = imu_in.yacc * gravity   - imu_acc_bias_yy;
@@ -462,6 +462,12 @@ void from_mav_mav_raw_data_callback(
         m.angular_velocity_covariance.elems[COV::XX] = calculateCovariance(imu_gyr_cov_xx, current_vel);
         m.angular_velocity_covariance.elems[COV::YY] = calculateCovariance(imu_gyr_cov_yy, current_vel);
         m.angular_velocity_covariance.elems[COV::ZZ] = calculateCovariance(imu_gyr_cov_zz, current_vel);
+
+
+        // set first element of covariances to -1 to show that orientation is invalid
+        // more infos: https://github.com/paulbovbel/rep/blob/master/rep-0145.rst#topics
+        m.orientation_covariance.elems[0] = -1;
+
 
         // magnetometer doesn't work
 
@@ -861,7 +867,7 @@ int main(int argc, char **argv) {
   from_mav_command_pub =            n.advertise<drive_ros_msgs::mav_cc16_COMMAND>("/from_mav/command", 10);
 
   // special message types
-  from_mav_imu_pub =                n.advertise<sensor_msgs::Imu>("/from_mav/imu", 10);
+  from_mav_imu_pub =                n.advertise<sensor_msgs::Imu>("/from_mav/imu/data_raw", 10);
   from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::VehicleEncoder>("/from_mav/odometer_delta", 10);
 
 
