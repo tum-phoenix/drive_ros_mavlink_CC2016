@@ -27,7 +27,7 @@
 
     <!-- test if we get an appropiate imu message rate -->
     <test test-name="imu_test" pkg="rostest" type="hztest" name="imu_test" time-limit="$(arg time_limit)">
-        <param name="topic" value="/from_mav/imu" />
+        <param name="topic" value="/from_mav/imu/data_raw" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
         <param name="test_duration" value="$(arg bag_length)" />
