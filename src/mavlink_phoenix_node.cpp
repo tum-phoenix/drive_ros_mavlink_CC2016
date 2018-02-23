@@ -442,9 +442,9 @@ void from_mav_mav_raw_data_callback(
         m.header.stamp = time_conv->convert_time(imu_in.timestamp);
         m.header.frame_id = "imu_link";
 
-        m.linear_acceleration.x = imu_in.xacc * gravity; // convert g's to m/s2
-        m.linear_acceleration.y = imu_in.yacc * gravity;
-        m.linear_acceleration.z =-imu_in.zacc * gravity;
+        m.linear_acceleration.x = -imu_in.xacc * gravity; // convert g's to m/s2
+        m.linear_acceleration.y = -imu_in.yacc * gravity;
+        m.linear_acceleration.z =  imu_in.zacc * gravity;
         m.linear_acceleration_covariance.elems[COV::XX] = calculateCovariance(imu_acc_cov_xx, current_vel);
         m.linear_acceleration_covariance.elems[COV::YY] = calculateCovariance(imu_acc_cov_yy, current_vel);
         m.linear_acceleration_covariance.elems[COV::ZZ] = calculateCovariance(imu_acc_cov_zz, current_vel);
@@ -467,15 +467,15 @@ void from_mav_mav_raw_data_callback(
         if(enable_imu_debug)
         {
           file_log << time_conv->convert_time(imu_in.timestamp) << ",";
-          file_log <<  imu_in.xacc*gravity << ",";
-          file_log <<  imu_in.yacc*gravity << ",";
-          file_log << -imu_in.zacc*gravity << ",";
-          file_log << imu_in.xgyro << ",";
-          file_log << imu_in.ygyro << ",";
-          file_log << imu_in.zgyro << ",";
-          file_log << imu_in.xmag  << ",";
-          file_log << imu_in.ymag  << ",";
-          file_log << imu_in.zmag  << std::endl;
+          file_log << -imu_in.xacc*gravity << ",";
+          file_log << -imu_in.yacc*gravity << ",";
+          file_log <<  imu_in.zacc*gravity << ",";
+          file_log <<  imu_in.xgyro << ",";
+          file_log <<  imu_in.ygyro << ",";
+          file_log <<  imu_in.zgyro << ",";
+          file_log <<  imu_in.xmag  << ",";
+          file_log <<  imu_in.ymag  << ",";
+          file_log <<  imu_in.zmag  << std::endl;
         }
 
         from_mav_imu_pub.publish(m);
