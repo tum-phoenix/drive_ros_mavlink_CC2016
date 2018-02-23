@@ -11,14 +11,3 @@ sensor_cov:
     imu_gyr_cov_xx: [0.001464116670147,2.189349670133266e-04,2.584000000000000e-04]
     imu_gyr_cov_yy: [0.001005399593144,0.001448078042849,9.376400000000000e-05]
     imu_gyr_cov_zz: [-7.973897706740275e-05,0.001160148046352,1.962500000000000e-04]
-
-# sensor bias (static offset)
-sensor_bias:
-    # be carefull with theses values!
-    # after IMU recalibration or different sensor position this values should be recalculated!
-    imu_acc_bias_xx: 0.4585     # static offset from 0
-    imu_acc_bias_yy: -0.2517    # static offset from 0
-    imu_acc_bias_zz: -0.4079    # static offset from -9.81 (gravity)
-    imu_gyr_bias_xx: 0.1196     # static offset from 0
-    imu_gyr_bias_yy: -0.0011    # static offset from 0
-    imu_gyr_bias_zz: 0.0036     # static offset from 0

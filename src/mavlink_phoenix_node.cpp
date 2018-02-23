@@ -69,13 +69,6 @@ static std::vector<double> imu_gyr_cov_xx;
 static std::vector<double> imu_gyr_cov_yy;
 static std::vector<double> imu_gyr_cov_zz;
 
-static double imu_acc_bias_xx;
-static double imu_acc_bias_yy;
-static double imu_acc_bias_zz;
-static double imu_gyr_bias_xx;
-static double imu_gyr_bias_yy;
-static double imu_gyr_bias_zz;
-
 
 static double current_vel = 0;
 
@@ -449,16 +442,16 @@ void from_mav_mav_raw_data_callback(
         m.header.stamp = time_conv->convert_time(imu_in.timestamp);
         m.header.frame_id = "imu_link";
 
-        m.linear_acceleration.x = imu_in.xacc * gravity   - imu_acc_bias_xx; // convert g's to m/s2
-        m.linear_acceleration.y = imu_in.yacc * gravity   - imu_acc_bias_yy;
-        m.linear_acceleration.z = -imu_in.zacc * gravity  - imu_acc_bias_zz; // wrong orientation
+        m.linear_acceleration.x = imu_in.xacc * gravity; // convert g's to m/s2
+        m.linear_acceleration.y = imu_in.yacc * gravity;
+        m.linear_acceleration.z =-imu_in.zacc * gravity;
         m.linear_acceleration_covariance.elems[COV::XX] = calculateCovariance(imu_acc_cov_xx, current_vel);
         m.linear_acceleration_covariance.elems[COV::YY] = calculateCovariance(imu_acc_cov_yy, current_vel);
         m.linear_acceleration_covariance.elems[COV::ZZ] = calculateCovariance(imu_acc_cov_zz, current_vel);
 
-        m.angular_velocity.x = imu_in.xgyro - imu_gyr_bias_xx;
-        m.angular_velocity.y = imu_in.ygyro - imu_gyr_bias_yy;
-        m.angular_velocity.z = imu_in.zgyro - imu_gyr_bias_zz;
+        m.angular_velocity.x = imu_in.xgyro;
+        m.angular_velocity.y = imu_in.ygyro;
+        m.angular_velocity.z = imu_in.zgyro;
         m.angular_velocity_covariance.elems[COV::XX] = calculateCovariance(imu_gyr_cov_xx, current_vel);
         m.angular_velocity_covariance.elems[COV::YY] = calculateCovariance(imu_gyr_cov_yy, current_vel);
         m.angular_velocity_covariance.elems[COV::ZZ] = calculateCovariance(imu_gyr_cov_zz, current_vel);
@@ -474,12 +467,12 @@ void from_mav_mav_raw_data_callback(
         if(enable_imu_debug)
         {
           file_log << time_conv->convert_time(imu_in.timestamp) << ",";
-          file_log <<  imu_in.xacc*gravity - imu_acc_bias_xx << ",";
-          file_log <<  imu_in.yacc*gravity - imu_acc_bias_yy << ",";
-          file_log << -imu_in.zacc*gravity - imu_acc_bias_zz << ",";
-          file_log << imu_in.xgyro - imu_gyr_bias_xx << ",";
-          file_log << imu_in.ygyro - imu_gyr_bias_yy << ",";
-          file_log << imu_in.zgyro - imu_gyr_bias_zz << ",";
+          file_log <<  imu_in.xacc*gravity << ",";
+          file_log <<  imu_in.yacc*gravity << ",";
+          file_log << -imu_in.zacc*gravity << ",";
+          file_log << imu_in.xgyro << ",";
+          file_log << imu_in.ygyro << ",";
+          file_log << imu_in.zgyro << ",";
           file_log << imu_in.xmag  << ",";
           file_log << imu_in.ymag  << ",";
           file_log << imu_in.zmag  << std::endl;
@@ -822,22 +815,6 @@ int main(int argc, char **argv) {
       ROS_INFO("Sensor covariances loaded successfully");
     }else{
       ROS_ERROR("Error loading sensor covariances!");
-      throw std::runtime_error("Error loading parameters");
-    }
-  }
-
-  // sensor biases
-  {
-    if( pnh.getParam("sensor_bias/imu_acc_bias_xx", imu_acc_bias_xx) &&
-        pnh.getParam("sensor_bias/imu_acc_bias_yy", imu_acc_bias_yy) &&
-        pnh.getParam("sensor_bias/imu_acc_bias_zz", imu_acc_bias_zz) &&
-        pnh.getParam("sensor_bias/imu_gyr_bias_xx", imu_gyr_bias_xx) &&
-        pnh.getParam("sensor_bias/imu_gyr_bias_yy", imu_gyr_bias_yy) &&
-        pnh.getParam("sensor_bias/imu_gyr_bias_zz", imu_gyr_bias_zz))
-    {
-      ROS_INFO("Sensor biases loaded successfully");
-    }else{
-      ROS_ERROR("Error loading sensor biases!");
       throw std::runtime_error("Error loading parameters");
     }
   }
