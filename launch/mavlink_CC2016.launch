@@ -16,6 +16,12 @@
 <!-- reset time offset between mavlink and ros after reaching this difference [microsec] -->
 <arg name="reset_offset" default="10000" />
 
+<!-- odometry static frame -->
+<arg name="static_frame" default="odom" />
+
+<!-- odometry moving frame -->
+<arg name="moving_frame" default="mavlink_odom" />
+
 
 <!-- constant communication time offset which is subtracted from overall time offset [microsec]-->
 <!-- TODO: calculate this value somehow -->
@@ -26,6 +32,8 @@
     <param name="reset_offset" type="int" value="$(arg reset_offset)" />
     <param name="enable_time_debug" type="bool" value="$(arg enable_time_debug)" />
     <param name="enable_imu_debug" type="bool" value="$(arg enable_imu_debug)" />
+    <param name="odom_static_frame" type="str" value="$(arg static_frame)" />
+    <param name="odom_moving_frame" type="str" value="$(arg moving_frame)" />
     <rosparam command="load" file="$(find drive_ros_mavlink_cc2016)/config/cc2017_car.yaml"/>
 </node>
 

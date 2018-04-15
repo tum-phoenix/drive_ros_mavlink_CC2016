@@ -6,9 +6,10 @@
 #include <drive_ros_mavlink_cc2016/phoenix/mavlink.h>
 #include <drive_ros_mavlink_cc2016/time_conv.h>
 #include <drive_ros_mavlink_cc2016/calc_cov.h>
+#include <drive_ros_mavlink_cc2016/cov_elements.h>
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Imu.h>
-#include <drive_ros_msgs/VehicleEncoder.h>
+#include <nav_msgs/Odometry.h>
 #include <fstream>
 #include <ros/ros.h>
 #include <cmath>
@@ -69,14 +70,14 @@ static std::vector<double> imu_gyr_cov_xx;
 static std::vector<double> imu_gyr_cov_yy;
 static std::vector<double> imu_gyr_cov_zz;
 
-
-static double current_vel = 0;
-
 // time converter class
 static TimeConverter* time_conv;
 
 static const double gravity = 9.81;
 
+// global variables
+static double current_vel = 0;
+static nav_msgs::Odometry odometry;
 
 
 /**
@@ -525,27 +526,23 @@ void from_mav_mav_raw_data_callback(
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_RAW' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_DELTA: {
-        drive_ros_msgs::VehicleEncoder m;
-        drive_ros_msgs::EncoderLinear enc;
-
 
         mavlink_odometer_delta_t odometer_delta_in;
         memset(&odometer_delta_in, 0, sizeof(odometer_delta_in));
         mavlink_msg_odometer_delta_decode(&mav_msg, &odometer_delta_in);
 
-        m.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
-        m.header.frame_id = "rear_axis_middle";
+        odometry.header.stamp = time_conv->convert_time(odometer_delta_in.timestamp);
 
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel = odometer_delta_in.xdist;
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].pos_rel_var = calculateCovariance(odo_pos_var, current_vel);
+        odometry.pose.pose.position.x += odometer_delta_in.xdist; // INTEGRATE !
+        odometry.pose.covariance[CovElem::lin_ang::linX_linX] = calculateCovariance(odo_pos_var, current_vel);
 
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel = odometer_delta_in.xvelocity;
-        m.encoder[drive_ros_msgs::VehicleEncoder::MOTOR].vel_var = calculateCovariance(odo_vel_var, current_vel);
+        odometry.twist.twist.linear.x = odometer_delta_in.xvelocity;
+        odometry.twist.covariance[CovElem::lin_ang::linX_linX] = calculateCovariance(odo_vel_var, current_vel);
 
         // save current velocity for covariance calculation
         current_vel = std::fabs(odometer_delta_in.xvelocity);
 
-        from_mav_odometer_delta_pub.publish(m);
+        from_mav_odometer_delta_pub.publish(odometry);
         ROS_DEBUG("[drive_ros_mavlink_cc2016] Received a 'ODOMETER_DELTA' from mavlink.");
       } break;
       case MAVLINK_MSG_ID_ODOMETER_DELTA_RAW: {
@@ -819,7 +816,12 @@ int main(int argc, char **argv) {
     }
   }
 
+  // odom frames
+  pnh.param<std::string>("odom_static_frame", odometry.header.frame_id, "odom");
+  pnh.param<std::string>("odom_moving_frame", odometry.child_frame_id, "odom_from_mav");
 
+
+  // raw data subscriber / publisher
   to_mav_mav_raw_data_publisher =     n.advertise<drive_ros_msgs::mav_RAW_DATA>("/to_mav/mav_raw_data", 10);
   from_mav_mav_raw_data_subscriber =  n.subscribe("/from_mav/mav_raw_data", 10, from_mav_mav_raw_data_callback);
 
@@ -845,7 +847,7 @@ int main(int argc, char **argv) {
 
   // special message types
   from_mav_imu_pub =                n.advertise<sensor_msgs::Imu>("/from_mav/imu/data_raw", 10);
-  from_mav_odometer_delta_pub =     n.advertise<drive_ros_msgs::VehicleEncoder>("/from_mav/odometer_delta", 10);
+  from_mav_odometer_delta_pub =     n.advertise<nav_msgs::Odometry>("/from_mav/odom", 10);
 
 
   /**

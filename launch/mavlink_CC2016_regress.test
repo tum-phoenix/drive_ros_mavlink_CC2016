@@ -35,7 +35,7 @@
 
     <!-- test if we get an appropiate odometer message rate -->
     <test test-name="odo_test" pkg="rostest" type="hztest" name="odo_test" time-limit="$(arg time_limit)">
-        <param name="topic" value="/from_mav/odometer_delta" />
+        <param name="topic" value="/from_mav/odom" />
         <param name="hz" value="335.0" />
         <param name="hzerror" value="20" />
         <param name="test_duration" value="$(arg bag_length)" />
